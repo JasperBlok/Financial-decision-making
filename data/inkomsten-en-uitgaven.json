@@ -1,0 +1,195 @@
+{
+    "inkomsten": {
+        "kinderbijslag": {
+            "omschrijving": "kinderbijslag wordt berekend per kind en per kwartaal.",
+            "tot5": 223.37,
+            "tot11": 271.24,
+            "tot17": 319.10
+        }
+    },
+    "uitgaven": {
+        "gasverbruik": {
+            "omscrhijving": {
+                "verbruik": "Gemiddeld verbruik per m3.",
+                "kosten": "Kosten per maand in €. Bij een gemiddeld gastarief (tarief na 1 januari 2021) van 79,44 eurocent per m3 en gemiddeld vastrecht van € 21,22 per maand (inclusief 21 procent btw). Afgeronde bedragen."
+            },
+            "bron": "https://www.nibud.nl/consumenten/energie-en-water/",
+            "flat": {
+                "verbruik": 920,
+                "kosten": 82
+            },
+            "tussenwoning": {
+                "verbruik": 1190,
+                "kosten": 100
+            },
+            "hoekwoning": {
+                "verbruik": 1380,
+                "kosten": 113
+            },
+            "twee_onder_een_kap": {
+                "verbruik": 1560,
+                "kosten": 124
+            },
+            "vrijstaand": {
+                "verbruik": 2010,
+                "kosten": 154
+            }
+        },
+        "elektriciteitsverbruik": [
+            {
+                "bron": "https://www.nibud.nl/consumenten/energie-en-water/",
+                "index": "aantal personen in huishouden. Index 5 == 5 of meer.",
+                "verbruik": "Gemiddeld gebruik per jaar. (in kWh)",
+                "kosten": "Kosten per maand in €. Bij een gemiddeld elektriciteitstarief (tarief na 1 januari 2021) van 22,05 eurocent per kWh en vastrecht van € 25,94 per maand (inclusief 21 procent btw). Inclusief de jaarlijkse belastingteruggave van € 558,56 (2021). Afgeronde bedragen."
+            },
+            {
+                "verbruik": 1810,
+                "kosten": 13
+            },
+            {
+                "verbruik": 2800,
+                "kosten": 31
+            },
+            {
+                "verbruik": 3310,
+                "kosten": 40
+            },
+            {
+                "verbruik": 3840,
+                "kosten": 50
+            },
+            {
+                "verbruik": 4110,
+                "kosten": 2730
+            }
+        ],
+        "waterverbruik": [
+            {
+                "bron": "https://www.nibud.nl/consumenten/energie-en-water/",
+                "index": "aantal personen in huishouden. Index 5 == 5 of meer.",
+                "verbruik": "Gemiddeld gebruik per jaar. (in m3)",
+                "kosten": "Kosten per maand in €. Berekend met een gemiddeld tarief van € 1,18 per m3 en gemiddeld vastrecht van € 67,49 per jaar (alles inclusief 9 procent btw). Afgeronde bedragen."
+            },
+            {
+                "verbruik": 46,
+                "kosten": 10
+            },
+            {
+                "verbruik": 93,
+                "kosten": 15
+            },
+            {
+                "verbruik": 135,
+                "kosten": 19
+            },
+            {
+                "verbruik": 163,
+                "kosten": 22
+            },
+            {
+                "verbruik": 184,
+                "kosten": 24
+            }
+        ],
+        "auto": {
+            "omschrijving": "Kosten van een auto per maand in €. Verdeeld in vaste kosten, variabele kosten en een totaal. Variabele kosten zijn afhankelijk van het gebruik van de auto. De berekeningen zijn op basis van tien jaar, bij respectievelijk 9.000, 10.000, 11.500 en 11.000 km per jaar. Voor de prijs van benzine is € 1,62 per liter aangehouden.",
+            "bron": "https://www.nibud.nl/consumenten/wat-kost-een-auto/",
+            "mini": {
+                "omschrijving": "mini klasse",
+                "vast": {
+                    "afschrijving": 59,
+                    "verzekering": 42,
+                    "belasting": 22,
+                    "onderhoud": 21,
+                    "totaal": 144
+                },
+                "variabel": {
+                    "afschrijving": 22.50,
+                    "onderhoud_reparatie": 39.50,
+                    "brandstof": 71,
+                    "totaal": 133
+                },
+                "totaal": 277,
+                "kilometers": 9000,
+                "kilometerprijs_totaal": 0.37,
+                "kilometerprijs_variabel": 0.177 
+            },
+            "compact": {
+                "omschrijving": "compacte klasse",
+                "vast": {
+                    "afschrijving": 83.50,
+                    "verzekering": 49.50,
+                    "belasting": 33.50,
+                    "onderhoud": 21,
+                    "totaal": 187.50
+                },
+                "variabel": {
+                    "afschrijving": 31,
+                    "onderhoud_reparatie": 46,
+                    "brandstof": 86.50,
+                    "totaal": 163.50
+                },
+                "totaal": 351,
+                "kilometers": 10000,
+                "kilometerprijs_totaal": 0.42,
+                "kilometerprijs_variabel": 0.196
+            },
+            "klein": {
+                "omschrijving": "kleine middenklasse",
+                "vast": {
+                    "afschrijving": 128.50,
+                    "verzekering": 60.50,
+                    "belasting": 49.50,
+                    "onderhoud": 21.50,
+                    "totaal": 260
+                },
+                "variabel": {
+                    "afschrijving": 41.50,
+                    "onderhoud_reparatie": 57,
+                    "brandstof": 103,
+                    "totaal": 201.50
+                },
+                "totaal": 461.50,
+                "kilometers": 11500,
+                "kilometerprijs_totaal": 0.48,
+                "kilometerprijs_variabel": 0.21
+            }
+        },
+        "voeding": {
+            "omschrijving": {
+                "kosten": "Dagelijkse kosten voor voeding per persoon in een tweepersoonshuishouden. k = kind, m = man, v = vrouw. Leeftijdsgroep gescheiden door _.",
+                "factor": "De vermenigvuldigheidsfactor voor voedselkosten in verschillende groottes huishoudens."
+            },
+            "bron": "https://www.nibud.nl/consumenten/wat-geeft-u-uit-aan-voeding/",
+            "kosten": {
+                "k_1_3": 2.50,
+                "k_4_8": 3.38,
+                "k_9_13": 5.53,
+                "m_14_50": 6.69,
+                "v_14_50": 5.97,
+                "m_51_69": 6.36,
+                "v_51_69": 5.99,
+                "mv_70+": 6.32
+            },
+            "factor": [
+                "Index is het aantal personen in huishouden. Index 4 == 4 of meer.",
+                1.10,
+                1.00,
+                0.80,
+                0.70
+            ]
+        },
+        "Belastingen": {
+            "inkomensbelasting": {
+                "omschrijving": "Voor al het inkomen onder de grens wordt het percentage in de eerste schijf betaald. Voor al het overgebleven inkomen boven deze grens, wordt het percentage van de tweede schijf betaald.",
+                "bron": "https://www.nibud.nl/consumenten/inkomstenbelasting/",
+                "grens": 68508,
+                "schijf1": 37.1,
+                "schijf2": 49.5
+            },
+            "vermogensbelasting": {
+                
+            }
+        }
+    } 
+}
