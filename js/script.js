@@ -294,6 +294,12 @@ function calcSalaries(people) {
 }
 
 
+// returns rental costs of a house.
+function calcHuur() {
+
+}
+
+
 // returns total to be paid to inkomstenbelasting
 function calcInkomstenbelasting(inkomsten) {
     let tot = 0;
@@ -313,7 +319,7 @@ function calcInkomstenbelasting(inkomsten) {
 // returns total to be paid to vermogensbelasing
 function calcVermogensbelasting(spaargeld, bezittingen, married) {
     let vermogen = spaargeld;
-    // TODO: bezittingen meerekenen 2e huis meerekenen.
+    // TODO: bezittingen meerekenen & 2e huis meerekenen.
     let tot = 0;
 
     let schijven = dataUitgaven.belastingen.vermogensbelasting.schijven;

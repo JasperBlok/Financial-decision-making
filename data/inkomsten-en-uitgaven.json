@@ -223,6 +223,16 @@
             "bron": "https://www.bespaarinfo.nl/gemiddelde-uitgaven/",
             "kosten": 50
         },
+        "kleding": {
+            "omschrijving": "Het gemiddelde percentage dat een huishouden uitgeeft aan kleding",
+            "bron": "https://www.bespaarinfo.nl/gemiddelde-uitgaven/",
+            "percentage": 4
+        },
+        "reserveringsuitgaven": {
+            "omschrijving": "Reserveringsuitgaven zijn een overkoepelende kostenpost. Kosten die niet maandelijks terug komen en vaak onverwachts zijn.",
+            "bron": "https://www.bespaarinfo.nl/gemiddelde-uitgaven/",
+            "percentage": 10
+        },
         "belastingen": {
             "inkomensbelasting": {
                 "omschrijving": "Voor al het inkomen onder de grens wordt het percentage in de eerste schijf betaald. Voor al het overgebleven inkomen boven deze grens, wordt het percentage van de tweede schijf betaald.",
