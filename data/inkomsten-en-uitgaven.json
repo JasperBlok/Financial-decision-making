@@ -179,16 +179,55 @@
                 0.70
             ]
         },
+        "zorgverzekering": {
+            "omschrijving": "Natura verzekering is goedkoper maar kan alleen zonder bijbetaling verzorgd worden bij instellingen onder contract. Resistutie vergoed overal hetzelfde, ongeacht de zorgverlener. De index van vrijwillig eigen risico is de korting per maand die gemiddeld behaald wordt door een vrijwillig eigen risico te nemen van: 100 * <index>. Het gebruik van een collectieve verzekering kan tot 5% korting opleveren.",
+            "bron": "https://www.nibud.nl/consumenten/zorgverzekering/",
+            "natura": {
+                "onder": 125,
+                "boven": 130
+            },
+            "resitutie": {
+                "onder": 132,
+                "boven": 140
+            },
+            "vrijwillig_risico_korting": [
+                0, 3, 6, 9, 12, 17
+            ],
+            "collectief": 5
+        },
         "Belastingen": {
             "inkomensbelasting": {
                 "omschrijving": "Voor al het inkomen onder de grens wordt het percentage in de eerste schijf betaald. Voor al het overgebleven inkomen boven deze grens, wordt het percentage van de tweede schijf betaald.",
                 "bron": "https://www.nibud.nl/consumenten/inkomstenbelasting/",
-                "grens": 68508,
-                "schijf1": 37.1,
-                "schijf2": 49.5
+                "schijven": [
+                    {
+                        "drempel": 0,
+                        "belasting": 37.1
+                    },
+                    {
+                        "drempel": 68508,
+                        "belasting": 49.5
+                    }
+                ]
             },
             "vermogensbelasting": {
-                
+                "omschrijving": "Net zoals bij inkomensbelasting, wordt bij vermogensbelasting op een stapelende manier gerekend. Onder de eerste drempelwaarde wordt niks betaald. De eerste drempelwaarde is verdubbeld wanneer iemand een fiscale partner heeft. Het percentage belasting wordt betaald over het berekende fictieve gemiddelde rendement. Alleen een tweede huis wordt meegeteld voor het totale vermogen waar vermogensbelasting over betaald wordt.",
+                "bron": "https://www.belastingdienst.nl/wps/wcm/connect/bldcontentnl/belastingdienst/prive/vermogen_en_aanmerkelijk_belang/vermogen/belasting_betalen_over_uw_vermogen/",
+                "belasting": 31,
+                "schijven": [
+                    {
+                        "drempel": 50000,
+                        "rendement": 1.898
+                    },
+                    {
+                        "drempel": 50000,
+                        "rendement": 4.501
+                    },
+                    {
+                        "drempel": 900000,
+                        "rendement": 5.69
+                    }
+                ]
             }
         }
     } 

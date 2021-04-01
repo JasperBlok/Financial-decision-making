@@ -1,19 +1,36 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Financial Pension Decision making</title>
 
+    <!-- Fonts -->
+
     <!-- Stylesheets -->
     <link rel="stylesheet" href="css/reset.css">
     <link rel="stylesheet" href="css/style.css">
 
     <!-- Scripts -->
-    <script src="js/script.js"></script>
+    <script src="https://d3js.org/d3.v6.min.js"></script>
+
+    <!-- Social: Twitter -->
+    <!-- <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="A visualization of earthquake density">
+    <meta name="twitter:description" content="This website shows how many earthquakes have happened at different places in the world.
+     The visualization uses the density to show how likely it is to experience an earthquake at a location">
+    <meta name="twitter:image" content="https://zuyd-bd08.github.io/earthquake-pushups-JasperBlok/img/preview-card.jpg"> -->
 </head>
+
 <body>
-    
+    <svg id="time_chart"></svg>
+    <button onclick="startVis()" disabled>start</button>
+    <svg id="line_total"></svg>
+
+    <!-- Scripts -->
+    <script src="js/script.js"></script>
 </body>
+
 </html>
