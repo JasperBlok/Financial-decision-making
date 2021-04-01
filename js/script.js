@@ -26,24 +26,34 @@ let dataJaarinkomen;
 let dataInkomsten;
 let dataUitgaven;
 let data = [
-    // {
-    //     profiel: "profile name",
-    //     data: []
-    //     // inkomsten: {},
-    //     // uitgaven: {},
-    // }
+    /*
+    {
+        profiel: "profile name",
+        data: [
+            {
+                leeftijd: 18,
+                total: 
+            }
+        ]
+        // inkomsten: {},
+        // uitgaven: {},
+    }
+    */
 ];
 
-// Data influencing variables
+// Visualisation influencing variables
 const startLeeftijd = 18;
 const eindLeeftijd = 67
+const speed = 2000;
+let tickInterval = null;
+const colors = ["#ff595e","#ffca3a","#8ac926","#1982c4","#6a4c93"];
 
 // Scales
 let xScale = getLinearScale(startLeeftijd, startLeeftijd+1, 0, width - margin.left - margin.right);
-let yScale = getLinearScale(50000, 0, 0, height - margin.top - margin.bottom); // min and max of yScale are inverted because the lowest value should appear at the bottom
+let yScale = getLinearScale(1000, 0, 0, height - margin.top - margin.bottom); // min and max of yScale are inverted because the lowest value should appear at the bottom
 const lineValues = d3.line()
-    .x((d, i) => { return xScale(i + 18); })
-    .y((d) => { return yScale(d); });
+    .x((d, i) => { return xScale(d.leeftijd /*i + startLeeftijd*/); })
+    .y((d) => { return yScale(d.total); });
 
 
 // retrieve data
@@ -74,47 +84,91 @@ function initializeGraph() {
 
     yAxis.call(d3.axisLeft(yScale));
 
-    //pathContainer.attr("transform", `translate("${margin.left}, ${margin.top}")`);
-    let tempData = getRandomData(getNum(startLeeftijd+1, eindLeeftijd-startLeeftijd), 10000, 150000);
+    //let tempData = getRandomData(getNum(startLeeftijd+1, eindLeeftijd-startLeeftijd), 10000, 150000);
+    let tempData = [1000]
     data.push({
         profiel: "testData",
-        data: tempData
+        data: [{
+            leeftijd: 18,
+            total: 1000
+        }]
+        //[...tempData]
+    })
+    data.push({
+        profiel: "testData2",
+        data: [{
+            leeftijd: 18,
+            total: 1000
+        }]
+    })
+    data.push({
+        profiel: "testData3",
+        data: [{
+            leeftijd: 18,
+            total: 1000
+        }]
     })
 }
 
 
 function startVis() {
-    data[0].data = getRandomData(getNum(startLeeftijd+1, eindLeeftijd-startLeeftijd), 10000, 150000);
+    if (tickInterval != null) {
+        clearInterval(tickInterval);
+        tickInterval = null;
+    }
+    else {
+        tick();
+        tickInterval = setInterval(tick, speed);
+    }
+}
+
+let yMin = 0;
+let yMax = 0;
+function tick() {    
+
+    for (let i = 0; i < data.length; i++) {
+        let values = {
+            leeftijd: data[i].data[data[i].data.length-1].leeftijd + 1,
+            total: getNum(1000, 1000 * (data[i].data.length + 1)),
+        }
+        data[i].data.push(values)
+        yMax = values.total > yMax ? values.total : yMax;
+    }
+    console.log(data)
+
     let tempData = data[0].data;
-    let min = d3.min(tempData);
-    let max = d3.max(tempData);
 
     xAxis.transition()
-        .duration(2000)
-        .call(d3.axisBottom(xScale.domain([startLeeftijd, eindLeeftijd])));
+        .duration(speed)
+        .ease(d3.easeLinear)
+        .call(d3.axisBottom(xScale.domain([startLeeftijd, tempData.length + startLeeftijd-1])));
 
     yAxis.transition()
-        .duration(2000)
-        .call(d3.axisLeft(yScale.domain([max, min])));
+        .duration(speed)
+        .ease(d3.easeLinear)
+        .call(d3.axisLeft(yScale.domain([yMax, yMin])));
 
     
     let paths = pathContainer.selectAll("path").data(data);
 
     let update = paths.transition()
-        .duration(2000)
+        .duration(speed)
+        .ease(d3.easeLinear)
         .attrTween("d", function(d) {
-            return pathTween(lineValues(d.data), 4, this)()
+            return pathTween(lineValues(d.data), 1, this)()
         });
     
     let enter = paths.enter()
         .append("path")
             .attr("id", (d) => {return `${d.profiel}`})
             .classed("line", true)
-            .attr("d", "M0,0 L0,0")
+            .attr("d", `M${xScale(0)},${yScale(0)}`)
+            .style("stroke", (d, i) => {return colors[i];})
             .transition()
-            .duration(2000)
+            .duration(speed)
+            .ease(d3.easeLinear)
             .attrTween("d", function(d) {
-                return pathTween(lineValues(d.data), 4, this)()
+                return pathTween(lineValues(d.data), 1, this)()
             });
 }
 
