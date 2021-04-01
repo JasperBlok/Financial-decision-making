@@ -8,6 +8,19 @@
         }
     },
     "uitgaven": {
+        "woninghuur": {
+            "omschrijving": "De gemiddelde huurprijs per m2",
+            "bron": "https://www.nvm.nl/media/mnibtcs0/vgm-nvm-huurcijfers-2020-factsheet.pdf",
+            "prijzen": {
+                "gemiddeld": 13.13,
+                "woonhuizen": 10.01,
+                "appartementen": 14.39
+            },
+            "oppervlak": {
+                "woonhuizen": 113.40,
+                "appartementen": 82.30
+            }
+        },
         "gasverbruik": {
             "omscrhijving": {
                 "verbruik": "Gemiddeld verbruik per m3.",
@@ -112,7 +125,7 @@
                 "totaal": 277,
                 "kilometers": 9000,
                 "kilometerprijs_totaal": 0.37,
-                "kilometerprijs_variabel": 0.177 
+                "kilometerprijs_variabel": 0.177
             },
             "compact": {
                 "omschrijving": "compacte klasse",
@@ -191,11 +204,26 @@
                 "boven": 140
             },
             "vrijwillig_risico_korting": [
-                0, 3, 6, 9, 12, 17
+                0,
+                3,
+                6,
+                9,
+                12,
+                17
             ],
             "collectief": 5
         },
-        "Belastingen": {
+        "overige_verzekeringen": {
+            "omschrijving": "Gemiddelde uitgaven per maand aan inboedel-, opstal- en aansprakelijkheidsverzekering in €",
+            "bron": "https://www.bespaarinfo.nl/gemiddelde-uitgaven/",
+            "kosten": 38
+        },
+        "media": {
+            "omschrijving": "Gemiddelde uitgaven per maand aan internet en televisie in €",
+            "bron": "https://www.bespaarinfo.nl/gemiddelde-uitgaven/",
+            "kosten": 50
+        },
+        "belastingen": {
             "inkomensbelasting": {
                 "omschrijving": "Voor al het inkomen onder de grens wordt het percentage in de eerste schijf betaald. Voor al het overgebleven inkomen boven deze grens, wordt het percentage van de tweede schijf betaald.",
                 "bron": "https://www.nibud.nl/consumenten/inkomstenbelasting/",
@@ -230,5 +258,5 @@
                 ]
             }
         }
-    } 
+    }
 }
