@@ -7,7 +7,7 @@ const margin = {
     top: 30,
     right: 50,
     bottom: 30,
-    left: 50
+    left: 60
 }
 
 // Element references
@@ -25,46 +25,55 @@ const pathContainer = axisContainer.append("g");
 let dataJaarinkomen;
 let dataInkomsten;
 let dataUitgaven;
-let data = [
-    /*
-    {
-        profile: "profile name",
-        data: [
-            {
-                year: 18,
-                total: 
-            }
-        ]
-        // inkomsten: {},
-        // uitgaven: {},
-    }
-    */
-];
+let dataUren;
+let dataUurlonen = {}
+let data = [];
 
 // Visualisation influencing variables
 const startLeeftijd = 18;
 const eindLeeftijd = 67
-const speed = 1000;
+let speed = 500;
 let tickInterval = null;
 const colors = ["#ff595e", "#ffca3a", "#8ac926", "#1982c4", "#6a4c93"];
+
+// Enumerators
+const car = {
+    MINI_KLASSE: "mini",
+    COMPACTE_KLASSE: "compact",
+    KLEINE_MIDDENKLASSE: "klein"
+}
+const house = {
+    FLAT: "flat",
+    TUSSENWONING: "tussenwoning",
+    HOEKWONING: "hoekwoning",
+    TWEE_ONDER_EEN_KAP: "twee_onder_een_kap",
+    VRIJSTAAND: "vrijstaand"
+}
 
 // Scales
 let xScale = getLinearScale(startLeeftijd, startLeeftijd + 1, 0, width - margin.left - margin.right);
 let yScale = getLinearScale(1000, 0, 0, height - margin.top - margin.bottom); // min and max of yScale are inverted because the lowest value should appear at the bottom
 const lineValues = d3.line()
-    .x((d, i) => { return xScale(d.year /*i + startLeeftijd*/); })
+    .x((d) => { return xScale(d.year); })
     .y((d) => { return yScale(d.total); });
-
+let yMin = 0;
+let yMax = 0;
 
 // retrieve data
 (async function () {
     dataJaarinkomen = await d3.csv("data/gemiddeld-persoonlijk-jaarinkomen-per-1000-euro-2017.csv");
+    dataUren = await d3.csv("data/gemiddeld-arbeidsuren.csv")
     let dataInUit = await d3.json("data/inkomsten-en-uitgaven.json");
     dataInkomsten = dataInUit.inkomsten;
     dataUitgaven = dataInUit.uitgaven;
+
+    calcUurlonen();
+
     btnStart.attr("disabled", null);
 
     console.log(dataJaarinkomen);
+    console.log(dataUren);
+    console.log(dataUurlonen);
     console.log(dataInkomsten);
     console.log(dataUitgaven);
 
@@ -84,66 +93,27 @@ function initializeGraph() {
 
     yAxis.call(d3.axisLeft(yScale));
 
-    //let tempData = getRandomData(getNum(startLeeftijd+1, eindLeeftijd-startLeeftijd), 10000, 150000);
-    let tempData = [1000]
-    data.push({
-        profile: "testData",
-        data: [{
-            year: startLeeftijd,
-            total: 1000
-        }]
-        //[...tempData]
-    })
-    data.push({
-        profile: "testData2",
-        data: [{
-            year: startLeeftijd,
-            total: 1000
-        }]
-    })
-    data.push({
-        profile: "testData3",
-        data: [{
-            year: startLeeftijd,
-            total: 1000
-        }]
-    })
-
+    // De nederlander heeft gemiddeld een woonoppervlak van 65 m2 https://www.beaufortmakelaars.nl/nederlander-heeft-gemiddeld-65-m2-woonoppervlakte/.
     // first general profile
-    data.push({
-        profile: "average",
-        people: [
-            {
-                gender: "m",
-                working: true,
-                age: 18
-            }
-        ],
-        married: false,
-        bezittingen: {
-            houses: [
-                {
-                    type: "flat",
-                    worth: 0,
-                    rental: true,
-                    living: true
-                }
-            ],
-            cars: [
-
-            ],
-            other: [
-
-            ]
-        },
-        data: [{
-            year: startLeeftijd,
-            total: 0,
-            inkomsten: {},
-            uitgaven: {}
-        }]
-    }
-
+    data.push(
+        createProfile("average", true)
+            .addPerson("m", true, 40, 18)
+            .addPerson("v", true, 30, 18)
+            .addPerson("m", false, 0, 2)
+            .addHouse(house.FLAT, 0, 82.30, true, true)
+            .addCar(car.MINI_KLASSE, 8000)
+            .setZorgverzekering(true, 0, false)
+            .setOverigVerzekering(38),
+        createProfile("average", false)
+            .addPerson("m", true, 40, 18)
+            .addHouse(house.TUSSENWONING, 0, 113.40, true, true)
+            .setZorgverzekering(true, 0, true)
+            .setOverigVerzekering(0),
+        createProfile("average", false)
+            .addPerson("m", true, 40, 18)
+            .addHouse(house.TUSSENWONING, 0, 113.40, false, true)
+            .setZorgverzekering(false, 0, false)
+            .setOverigVerzekering(36)
     )
 }
 
@@ -159,46 +129,94 @@ function startVis() {
     }
 }
 
-let yMin = 0;
-let yMax = 0;
-function tick() {
 
+function tick() {
+    // Do calculations for every profile
     for (let i = 0; i < data.length; i++) {
         let entry = data[i];
-        let values = {
-            year: entry.data[entry.data.length - 1].year + 1,
-            total: entry.data[entry.data.length - 1].total,
-            inkomsten: {
-                total: 0
-            },
-            uitgaven: {
-                total: 0,
-                belastingen: {}
-            }
-        }
+        let values = createYearData(entry.data[entry.data.length - 1].year + 1, entry.data[entry.data.length - 1].savings, entry.data[entry.data.length - 1].pension);
+
+
+        // changes to the profile
         switch (entry.profile) {
             case "average":
-                // inkomsten berekenen
-                values.inkomsten.salaries = calcSalaries(entry.people);
-                values.inkomsten.total += values.inkomsten.salaries
-
-                // uitgaven berekenen
-                values.uitgaven.belastingen.inkomensbelasting = calcInkomstenbelasting(values.inkomsten);
-                values.uitgaven.belastingen.vermogensbelasting = calcVermogensbelasting(values.total, entry.bezittingen, entry.married);
-                values.uitgaven.total += values.uitgaven.belastingen.inkomensbelasting + values.uitgaven.belastingen.vermogensbelasting
-
-                // totalen optellen
-                values.total = values.total + values.inkomsten.total - values.uitgaven.total;
+                let b = null;
                 break;
             case "":
                 break;
             default:
-                values.total = getNum(1000, 1000 * (entry.data.length + 1))
                 break;
         }
+
+
+        // Calculate income and expenses
+        // inkomsten en uitgaven van woningen
+        entry.bezittingen.houses.forEach(h => {
+            if (h.living) {
+                if (h.rental) {
+                    values.uitgaven.huiskosten.huur = calcHuur(h) * 4
+                    values.uitgaven.huiskosten.total += values.uitgaven.huiskosten.huur;
+                }
+                else {
+                    values.uitgaven.huiskosten.gas = calcGaskosten(h) * 12;
+                    values.uitgaven.huiskosten.water = calcWaterkosten(entry.people) * 12;
+                    values.uitgaven.huiskosten.elektriciteit = calcElektriciteitskosten(entry.people) * 12;
+                    values.uitgaven.huiskosten.total += values.uitgaven.huiskosten.gas;
+                }
+            }
+            else if (h.rental) {
+                values.inkomsten.huisverhuur += calcHuur(h) * 4
+            }
+        });
+        // omdat deze persoonsgebonden zijn maar één keer tellen en dus niet in de loop toevoegen
+        values.uitgaven.huiskosten.total += values.uitgaven.huiskosten.water + values.uitgaven.huiskosten.elektriciteit;        
+
+
+        // inkomsten berekenen
+        values.inkomsten.salaries = calcSalaries(entry.people);
+        // geld opzij gezet voor pension van salaris. Meestal wordt rond de 20% opzij gezet van het salaris. https://www.rabobank.nl/particulieren/pension/vuistregels-pension
+        let pension = values.inkomsten.salaries * 0.2;
+        values.pension += pension;
+        values.inkomsten.kinderbijslag = calcKinderbijslag(entry.people) * 4;
+        // total
+        values.inkomsten.total += values.inkomsten.salaries + values.inkomsten.huisverhuur + values.inkomsten.kinderbijslag - pension;
+
+
+        // uitgaven berekenen
+        // verzekeringen
+        values.uitgaven.verzekeringen.zorgverzekering = calcZorgverzekering(entry.verzekeringen.zorgverzekering, entry.people);
+        values.uitgaven.verzekeringen.overige = entry.verzekeringen.overige * 12
+        values.uitgaven.verzekeringen.total += values.uitgaven.verzekeringen.zorgverzekering + values.uitgaven.verzekeringen.overige;
+        // belastingen
+        values.uitgaven.belastingen.inkomensbelasting = calcInkomstenbelasting(values.inkomsten);
+        values.uitgaven.belastingen.vermogensbelasting = calcVermogensbelasting(values.savings, entry.bezittingen, entry.married);
+        values.uitgaven.belastingen.total += values.uitgaven.belastingen.inkomensbelasting + values.uitgaven.belastingen.vermogensbelasting;
+        // overige uitgaven
+        values.uitgaven.overige.voeding = calcVoedingskosten(entry.people); //uitgaven aan voeding over een jaar
+        values.uitgaven.overige.kleding = values.inkomsten.total * dataUitgaven.kleding.percentage * 0.01 //percentage van inkomen wat besteed wordt aan kleding in een gezin
+        values.uitgaven.overige.media = dataUitgaven.media.kosten * 12; //uitgaven aan media zoals: tv, internet, telefoon
+        values.uitgaven.overige.reservering = values.inkomsten.total * dataUitgaven.reserveringsuitgaven.percentage * 0.01 //reserveringsuitgaven exclusief kleding
+        values.uitgaven.overige.autos = calcAutokosten(entry.bezittingen.cars); //uitgaven aan auto gerelateerde zaken
+        values.uitgaven.overige.total += values.uitgaven.overige.voeding + values.uitgaven.overige.kleding + values.uitgaven.overige.media + values.uitgaven.overige.reservering;
+        // total
+        values.uitgaven.total += values.uitgaven.verzekeringen.total + values.uitgaven.belastingen.total + values.uitgaven.huiskosten.total + values.uitgaven.overige.total;
+
+
+        // vermogen in bezittingen berekenen
+        values.vermogen.cars = calcAutoVermogen(entry.bezittingen.cars);
+        values.vermogen.houses = calcHuisVermogen(entry.bezittingen.houses);
+        values.vermogen.total += values.vermogen.cars + values.vermogen.houses;
+
+
+        // totalen optellen
+        values.savings += values.inkomsten.total - values.uitgaven.total
+        values.total = values.savings + values.pension + values.vermogen.total;
+
         entry.data.push(values)
         yMax = values.total > yMax ? values.total : yMax;
+        yMin = values.total < yMin ? values.total : yMin;
     }
+
     console.log(data)
 
     let tempData = data[0].data;
@@ -227,7 +245,7 @@ function tick() {
         .append("path")
         .attr("id", (d) => { return `${d.profile}` })
         .classed("line", true)
-        .attr("d", `M${xScale(0)},${yScale(0)}`)
+        .attr("d", `M${xScale(0)},${yScale(0)} L${xScale(0)},${yScale(0)}`)
         .style("stroke", (d, i) => { return colors[i]; })
         .transition()
         .duration(speed)
@@ -246,57 +264,337 @@ function getLinearScale(minData, maxData, minRange, maxRange) {
 }
 
 
+// calculates how much € (*1000) a person makes in a year by working 1 hour per week
+function calcUurlonen() {
+    for (let i = 15; i < 68; i++) {
+        let obj = {}
+
+        if (i < 20) {
+            obj.m = +dataJaarinkomen[0].Man
+            obj.v = +dataJaarinkomen[0].Vrouw;
+        }
+        else if (i < 25) {
+            obj.m = +dataJaarinkomen[1].Man;
+            obj.v = +dataJaarinkomen[1].Vrouw;
+        }
+        else if (i < 30) {
+            obj.m = +dataJaarinkomen[3].Man;
+            obj.v = +dataJaarinkomen[3].Vrouw;
+        }
+        else if (i < 35) {
+            obj.m = +dataJaarinkomen[4].Man;
+            obj.v = +dataJaarinkomen[4].Vrouw;
+        }
+        else if (i < 40) {
+            obj.m = +dataJaarinkomen[5].Man;
+            obj.v = +dataJaarinkomen[5].Vrouw;
+        }
+        else if (i < 45) {
+            obj.m = +dataJaarinkomen[6].Man;
+            obj.v = +dataJaarinkomen[6].Vrouw;
+        }
+        else if (i < 50) {
+            obj.m = +dataJaarinkomen[7].Man;
+            obj.v = +dataJaarinkomen[7].Vrouw;
+        }
+        else if (i < 55) {
+            obj.m = +dataJaarinkomen[8].Man;
+            obj.v = +dataJaarinkomen[8].Vrouw;
+        }
+        else if (i < 60) {
+            obj.m = +dataJaarinkomen[9].Man;
+            obj.v = +dataJaarinkomen[9].Vrouw;
+        }
+        else if (i < 65) {
+            obj.m = +dataJaarinkomen[10].Man;
+            obj.v = +dataJaarinkomen[10].Vrouw;
+        }
+        else {
+            obj.m = +dataJaarinkomen[11].Man;
+            obj.v = +dataJaarinkomen[11].Vrouw;
+        }
+
+        if (i < 25) {
+            obj.m = obj.m / +dataUren[0].Man
+            obj.v = obj.v / +dataUren[0].Vrouw
+        }
+        else if (i < 35) {
+            obj.m = obj.m / +dataUren[1].Man
+            obj.v = obj.v / +dataUren[1].Vrouw
+        }
+        else if (i < 45) {
+            obj.m = obj.m / +dataUren[2].Man
+            obj.v = obj.v / +dataUren[2].Vrouw
+        }
+        else if (i < 55) {
+            obj.m = obj.m / +dataUren[3].Man
+            obj.v = obj.v / +dataUren[3].Vrouw
+        }
+        else {
+            obj.m = obj.m / +dataUren[4].Man
+            obj.v = obj.v / +dataUren[4].Vrouw
+        }
+
+        dataUurlonen[`${i}`] = obj;
+    }
+}
+
+
+// returns new profile to do calculations with
+function createProfile(name, married) {
+    let profile = {
+        profile: `${name}`,
+        married: married,
+        people: [],
+        recreation: {
+            min: 0,
+            max: 0,
+            min_percent: 0,
+            max_percent: 0,
+        },
+        bezittingen: {
+            houses: [],
+            cars: [],
+            other: []
+        },
+        verzekeringen: {
+            zorgverzekering: {
+                type: "resitutie",
+                vrijwillig_risico: 0,
+                collectief: false
+            },
+            overige: 38
+        },
+        data: [createYearData(18, 0, 0)],
+        addPerson: function (gender, working, workhours, age) {
+            this.people.push({
+                gender: gender,
+                working: working,
+                workhours: workhours,
+                age: age
+            });
+            return this;
+        },
+        addHouse: function (type, worth, oppervlak, rental, living) {
+            this.bezittingen.houses.push({
+                type: type,
+                worth: worth,
+                oppervlak: oppervlak,
+                rental: rental,
+                living: living
+            });
+            return this;
+        },
+        addCar: function (type, worth) {
+            this.bezittingen.cars.push({
+                type: type,
+                worth: worth
+            });
+            return this;
+        },
+        setZorgverzekering: function (resitutie, risico, collectief) {
+            this.verzekeringen.zorgverzekering = {
+                type: `${resitutie ? "resitutie" : "natura"}`,
+                vrijwillig_risico: risico,
+                collectief: collectief
+            }
+            return this;
+        },
+        setOverigVerzekering: function (kosten) {
+            this.verzekeringen.overige = kosten
+            return this;
+        },
+        setRecreationBudget: function (min, max, min_percent, max_percent) {
+            this.recreation.min = min;
+            this.recreation.min_percent = min_percent;
+            this.recreation.max = max;
+            this.recreation.max_percent = max_percent;
+            return this;
+        }
+    }
+    return profile;
+}
+
+
+// returns new object to fill with that years data and to do calculations with
+function createYearData(year, savings, pension) {
+    let yearData = {
+        year: year,
+        total: 0,
+        savings: savings,
+        inkomsten: {
+            total: 0,
+            huisverhuur: 0
+        },
+        uitgaven: {
+            total: 0,
+            huiskosten: {
+                total: 0,
+                gas: 0,
+                water: 0,
+                elektriciteit: 0
+            },
+            verzekeringen: {
+                total: 0
+            },
+            belastingen: {
+                total: 0
+            },
+            overige: {
+                total: 0
+            }
+        },
+        vermogen: {
+            total: 0
+        },
+        pension: pension
+    }
+    return yearData;
+}
+
+
 // returns average salary based on age group of all the people in an household
 function calcSalaries(people) {
     let tot = 0;
-    let checkGender = (s) => { return s === "m" ? "Man" : "Vrouw" };
     people.forEach(person => {
         if (person.working) {
-            if (person.age > 14 && person.age < 20) {
-                tot += +dataJaarinkomen[0][checkGender(person.gender)];
-            }
-            else if (person.age < 25) {
-                tot += +dataJaarinkomen[1][checkGender(person.gender)];
-            }
-            else if (person.age < 30) {
-                tot += +dataJaarinkomen[2][checkGender(person.gender)];
-            }
-            else if (person.age < 35) {
-                tot += +dataJaarinkomen[3][checkGender(person.gender)];
-            }
-            else if (person.age < 40) {
-                tot += +dataJaarinkomen[4][checkGender(person.gender)];
-            }
-            else if (person.age < 45) {
-                tot += +dataJaarinkomen[5][checkGender(person.gender)];
-            }
-            else if (person.age < 50) {
-                tot += +dataJaarinkomen[6][checkGender(person.gender)];
-            }
-            else if (person.age < 55) {
-                tot += +dataJaarinkomen[7][checkGender(person.gender)];
-            }
-            else if (person.age < 60) {
-                tot += +dataJaarinkomen[8][checkGender(person.gender)];
-            }
-            else if (person.age < 65) {
-                tot += +dataJaarinkomen[9][checkGender(person.gender)];
-            }
-            else {
-                tot += +dataJaarinkomen[10][checkGender(person.gender)];
-            }
+            tot += dataUurlonen[`${person.age}`][`${person.gender}`] * person.workhours;
         }
         person.age += 1;
     });
     tot = tot * 1000;
-    console.log(tot);
     return tot;
 }
 
 
-// returns rental costs of a house.
-function calcHuur() {
+// returns amount of € recieved per child each quarter year from the goverment
+function calcKinderbijslag(people) {
+    let tot = 0;
+    let dataBijslag = dataInkomsten.kinderbijslag;
+    people.forEach(p => {
+        if (p.age < 6) {
+            tot += +dataBijslag["tot5"];
+        }
+        else if (p.age < 12) {
+            tot += +dataBijslag["tot11"];
+        }
+        else if (p.age < 18) {
+            tot += +dataBijslag["tot17"];
+        }
+    });
+    return tot;
+}
 
+
+// returns the costs for food per month
+function calcVoedingskosten(people) {
+    let tot = 0;
+    let dataVoeding = dataUitgaven.voeding;
+    people.forEach(p => {
+        if (p.age < 4) {
+            tot += dataVoeding.kosten.k_1_3;
+        }
+        else if (p.age < 9) {
+            tot += dataVoeding.kosten.k_4_8;
+        }
+        else if (p.age < 14) {
+            tot += dataVoeding.kosten.k_9_13;
+        }
+        else if (p.age < 51) {
+            if (p.gender === "m") {
+                tot += dataVoeding.kosten.m_14_50;
+            }
+            else {
+                tot += dataVoeding.kosten.v_14_50;
+            }
+        }
+        else if (p.age < 70) {
+            if (p.gender === "m") {
+                tot += dataVoeding.kosten.m_51_69;
+            }
+            else {
+                tot += dataVoeding.kosten.v_51_69;
+            }
+        }
+        else {
+            tot += dataVoeding.kosten["mv_70+"];
+        }
+    });
+    return tot * dataVoeding.factor[people.length > 4 ? 4 : people.length] * 365;
+}
+
+
+// returns rental costs of a house.
+function calcHuur(huis) {
+    if (huis.type === house.FLAT) {
+        return huis.oppervlak * dataUitgaven.woninghuur.prijzen.appartementen;
+    }
+    else {
+        return huis.oppervlak * dataUitgaven.woninghuur.prijzen.woonhuizen;
+    }
+}
+
+
+function calcAutokosten(cars) {
+    let tot = 0;
+    let dataAuto = dataUitgaven.auto;
+    cars.forEach(c => {
+        let dataType = dataAuto[c.type];
+        let afschrijving = c.worth < (dataType.vast.afschrijving + dataType.variabel.afschrijving) * 12 ? c.worth : (dataType.vast.afschrijving + dataType.variabel.afschrijving) * 12
+        tot += dataType.totaal * 12 - afschrijving;
+        c.worth = c.worth - afschrijving;
+    });
+    return tot;
+}
+
+
+// return gas upkeep costs
+function calcGaskosten(huis) {
+    let gas = dataUitgaven.gasverbruik
+    switch (huis.type) {
+        case house.FLAT:
+            return gas.flat.kosten;
+        case house.TUSSENWONING:
+            return gas.tussenwoning.kosten;
+        case house.HOEKWONING:
+            return gas.hoekwoning.kosten;
+        case house.TWEE_ONDER_EEN_KAP:
+            return gas.twee_onder_een_kap.kosten;
+        case house.VRIJSTAAND:
+            return gas.vrijstaand.kosten;
+        default:
+            return 0;
+    }
+}
+
+
+// return water upkeep costs
+function calcWaterkosten(people) {
+    let amount = people.length > 5 ? 5 : people.length;
+    return dataUitgaven.waterverbruik[amount].kosten;
+}
+
+
+// return electricity upkeep costs
+function calcElektriciteitskosten(people) {
+    let amount = people.length > 5 ? 5 : people.length;
+    return dataUitgaven.elektriciteitsverbruik[amount].kosten;
+}
+
+
+// return costs of medicare insurance
+function calcZorgverzekering(verzekering, people) {
+    let dataZorg = dataUitgaven.zorgverzekering;
+    let er = dataZorg.vrijwillig_risico_korting[verzekering.vrijwillig_risico / 100]; // eigen risico korting
+    er = 1 - er * 0.01
+    let collectief = verzekering.collectief ? dataZorg.collectief : 0;
+    collectief = 1 - collectief * 0.01
+    if (verzekering.type === "resitutie") {
+        return getNum(dataZorg.resitutie.onder, dataZorg.resitutie.boven) * people.length * er * collectief;
+    }
+    else {
+        return getNum(dataZorg.natura.onder, dataZorg.natura.boven) * people.length * er * collectief;
+    }
 }
 
 
@@ -323,7 +621,7 @@ function calcVermogensbelasting(spaargeld, bezittingen, married) {
     let tot = 0;
 
     let schijven = dataUitgaven.belastingen.vermogensbelasting.schijven;
-    const drempel1 = married ? schijven[0].drempel*2 : schijven[0].drempel;
+    const drempel1 = married ? schijven[0].drempel * 2 : schijven[0].drempel;
     const drempel2 = drempel1 + schijven[1].drempel;
     const drempel3 = drempel2 + schijven[2].drempel;
 
@@ -341,7 +639,28 @@ function calcVermogensbelasting(spaargeld, bezittingen, married) {
     }
     tot = tot / 100;
     tot = tot * dataUitgaven.belastingen.vermogensbelasting.belasting / 100;
-    console.log(tot)
+    return tot;
+}
+
+
+// returns total worth of all cars combined
+function calcAutoVermogen(cars) {
+    let tot = 0;
+    cars.forEach(c => {
+        tot += c.worth;
+    });
+    return tot;
+}
+
+
+// returns total worth of all houses owned combined, by default the house the person is living in is included in this calculation
+function calcHuisVermogen(houses, includeLiving = true) {
+    let tot = 0;
+    houses.forEach(h => {
+        if (!h.living || (h.living && includeLiving && !h.rental)) {
+            tot += h.worth;
+        }
+    });
     return tot;
 }
 
@@ -385,6 +704,7 @@ function getRandomData(size, minValue, maxValue) {
     }
     return dataArray;
 }
+
 
 // returns a random number between and including the min and max values
 // used for generating random data for testing or random factors like share increases.
