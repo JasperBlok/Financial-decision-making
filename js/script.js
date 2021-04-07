@@ -100,20 +100,23 @@ function initializeGraph() {
             .addPerson("m", true, 40, 18)
             .addPerson("v", true, 30, 18)
             .addPerson("m", false, 0, 2)
-            .addHouse(house.FLAT, 0, 82.30, true, true)
+            .addHouse(house.FLAT, 314000, 82.30, true, true)
             .addCar(car.MINI_KLASSE, 8000)
             .setZorgverzekering(true, 0, false)
-            .setOverigVerzekering(38),
+            .setOverigVerzekering(38)
+            .setRecreationBudget(100, 300, 10, 20),
         createProfile("average", false)
             .addPerson("m", true, 40, 18)
-            .addHouse(house.TUSSENWONING, 0, 113.40, true, true)
+            .addHouse(house.TUSSENWONING, 314000, 113.40, true, true)
             .setZorgverzekering(true, 0, true)
-            .setOverigVerzekering(0),
-        createProfile("average", false)
+            .setOverigVerzekering(0)
+            .setRecreationBudget(100, 150, 5, 15),
+        createProfile("house", false)
             .addPerson("m", true, 40, 18)
-            .addHouse(house.TUSSENWONING, 0, 113.40, false, true)
+            //.addHouse(house.TUSSENWONING, 314000, 113.40, false, true)
             .setZorgverzekering(false, 0, false)
             .setOverigVerzekering(36)
+            .setRecreationBudget(100, 200, 5, 30),
     )
 }
 
@@ -139,10 +142,14 @@ function tick() {
 
         // changes to the profile
         switch (entry.profile) {
-            case "average":
-                let b = null;
-                break;
-            case "":
+            case "house":
+                if (values.year == 25) {
+                    buyHouse(entry, values, house.TUSSENWONING, entry.savings * 10, 113.40, 10, entry.savings * 10 / 30)
+                    entry.bezittingen.houses.forEach(h => {
+                        h.living = false;
+                    })
+                    entry.bezittingen.houses[entry.bezittingen.houses.length -1].living = true;
+                }
                 break;
             default:
                 break;
@@ -181,10 +188,12 @@ function tick() {
         // total
         values.inkomsten.total += values.inkomsten.salaries + values.inkomsten.huisverhuur + values.inkomsten.kinderbijslag - pension;
 
+        
 
         // uitgaven berekenen
+        calcDebts(values, entry.debts);
         // verzekeringen
-        values.uitgaven.verzekeringen.zorgverzekering = calcZorgverzekering(entry.verzekeringen.zorgverzekering, entry.people);
+        values.uitgaven.verzekeringen.zorgverzekering = calcZorgverzekering(entry.verzekeringen.zorgverzekering, entry.people) * 12;
         values.uitgaven.verzekeringen.overige = entry.verzekeringen.overige * 12
         values.uitgaven.verzekeringen.total += values.uitgaven.verzekeringen.zorgverzekering + values.uitgaven.verzekeringen.overige;
         // belastingen
@@ -193,23 +202,32 @@ function tick() {
         values.uitgaven.belastingen.total += values.uitgaven.belastingen.inkomensbelasting + values.uitgaven.belastingen.vermogensbelasting;
         // overige uitgaven
         values.uitgaven.overige.voeding = calcVoedingskosten(entry.people); //uitgaven aan voeding over een jaar
-        values.uitgaven.overige.kleding = values.inkomsten.total * dataUitgaven.kleding.percentage * 0.01 //percentage van inkomen wat besteed wordt aan kleding in een gezin
         values.uitgaven.overige.media = dataUitgaven.media.kosten * 12; //uitgaven aan media zoals: tv, internet, telefoon
-        values.uitgaven.overige.reservering = values.inkomsten.total * dataUitgaven.reserveringsuitgaven.percentage * 0.01 //reserveringsuitgaven exclusief kleding
         values.uitgaven.overige.autos = calcAutokosten(entry.bezittingen.cars); //uitgaven aan auto gerelateerde zaken
-        values.uitgaven.overige.total += values.uitgaven.overige.voeding + values.uitgaven.overige.kleding + values.uitgaven.overige.media + values.uitgaven.overige.reservering;
+        values.uitgaven.overige.kleding = values.inkomsten.total * dataUitgaven.kleding.percentage * 0.01 //percentage van inkomen wat besteed wordt aan kleding in een gezin
+        values.uitgaven.overige.reservering = values.inkomsten.total * dataUitgaven.reserveringsuitgaven.percentage * 0.01 //reserveringsuitgaven exclusief kleding
+        values.uitgaven.overige.total += values.uitgaven.overige.voeding + values.uitgaven.overige.kleding + values.uitgaven.overige.media + values.uitgaven.overige.reservering + values.uitgaven.overige.autos;
         // total
-        values.uitgaven.total += values.uitgaven.verzekeringen.total + values.uitgaven.belastingen.total + values.uitgaven.huiskosten.total + values.uitgaven.overige.total;
+        values.uitgaven.total += values.uitgaven.verzekeringen.total + values.uitgaven.belastingen.total + values.uitgaven.huiskosten.total + values.uitgaven.overige.total + values.uitgaven.debts.total;
+        // expenses to recreation
+        values.uitgaven.overige.recreation = calcRecreatieUitgaven(values.inkomsten.total, values.uitgaven.total, entry.recreation);
+        values.uitgaven.total += values.uitgaven.overige.recreation;
 
 
         // vermogen in bezittingen berekenen
         values.vermogen.cars = calcAutoVermogen(entry.bezittingen.cars);
         values.vermogen.houses = calcHuisVermogen(entry.bezittingen.houses);
-        values.vermogen.total += values.vermogen.cars + values.vermogen.houses;
+        values.vermogen.total = values.vermogen.total + values.vermogen.cars + values.vermogen.houses - values.vermogen.debts;
 
 
-        // totalen optellen
+
+        // inkomsten en uitgavne optellen
         values.savings += values.inkomsten.total - values.uitgaven.total
+        // spaarrente berkenen
+        values.inkomsten.spaarrente = calcSpaarrente(values.savings)
+        values.inkomsten.total += values.inkomsten.spaarrente;
+        values.savings += values.inkomsten.spaarrente;
+        // totaal berekenen
         values.total = values.savings + values.pension + values.vermogen.total;
 
         entry.data.push(values)
@@ -357,6 +375,7 @@ function createProfile(name, married) {
             cars: [],
             other: []
         },
+        debts: [],
         verzekeringen: {
             zorgverzekering: {
                 type: "resitutie",
@@ -390,6 +409,15 @@ function createProfile(name, married) {
                 type: type,
                 worth: worth
             });
+            return this;
+        },
+        addDebt: function (type, amount, interest, relief) {
+            this.debts.push({
+                type: type,
+                amount: amount,
+                interest: interest,
+                relief: relief
+            })
             return this;
         },
         setZorgverzekering: function (resitutie, risico, collectief) {
@@ -440,16 +468,35 @@ function createYearData(year, savings, pension) {
             belastingen: {
                 total: 0
             },
+            debts: {
+                total: 0
+            },
             overige: {
                 total: 0
             }
         },
         vermogen: {
+            debts: 0,
             total: 0
         },
         pension: pension
     }
     return yearData;
+}
+
+
+// simulates buying a house
+function buyHouse(profile, yearData, type, worth, oppervlak, percent_payed, relief) {
+    if (percent_payed < 10) {
+        console.warn(`Tried to pay only ${percent_payed}% of the house costs!`);
+        return;
+    }
+    let payed = worth * percent_payed * 0.01;
+    profile.addHouse(type, worth, oppervlak, false, false)
+        .addDebt("huishypotheek", worth - payed, getNum(100, 200) / 100, relief);
+    yearData.uitgaven.huiskosten.huisaankoop = payed;
+    yearData.uitgaven.huiskosten.total += payed;
+    return profile;
 }
 
 
@@ -483,6 +530,29 @@ function calcKinderbijslag(people) {
         }
     });
     return tot;
+}
+
+
+// returns interest on savings
+function calcSpaarrente(savings) {
+    // the average interest on savings is 0.05%: https://blog.spaarrente.nl/gemiddelde-rente-spaarrekening#:~:text=Gemiddelde%20rente%20spaarrekening%20en%20deposito,-Door%20Redactie%20Spaarrente&text=Voor%20een%20vrij%20opneembare%20spaarrekening,jaars%20deposito%3A%200%2C38%25
+    return savings < 0 ? 0 : savings * 0.0005;
+}
+
+
+// returns the amount of money spent on recreative purposes
+function calcRecreatieUitgaven(inkomsten, uitgaven, border) {
+    let min = inkomsten * border.min_percent * 0.01;
+    min = min < border.min ? border.min : min;
+    let max = inkomsten * border.max_percent * 0.01;
+    max = max < border.max ? border.max : max;
+    let budget = inkomsten - uitgaven;
+    budget = budget < 0 ? 0 : budget;
+    if (min > budget) {
+        return budget;
+    }
+    max = max > budget ? budget : max;
+    return getNum(min, max);
 }
 
 
@@ -657,11 +727,42 @@ function calcAutoVermogen(cars) {
 function calcHuisVermogen(houses, includeLiving = true) {
     let tot = 0;
     houses.forEach(h => {
+        // de prijsstijging van huizen is historisch gezien, gemiddeld genomen 4,85%: https://www.wegwijs.nl/verdieping/longreads/1-februari-huizenmarkt/
+        let f = 1 + getNum(300, 670) * 0.0001;
+        h.worth = h.worth * f;
         if (!h.living || (h.living && includeLiving && !h.rental)) {
             tot += h.worth;
         }
     });
     return tot;
+}
+
+
+// returns total of debts
+function calcDebts(yearData, debts) {
+    let tot = 0;
+    for (let i = 0; i < debts.length; i++) {
+        let d = debts[i];
+        if (d.amount < d.relief) {
+            yearData.uitgaven.debts[d.type] = {
+                total: d.amount,
+                relief: d.amount,
+                interest: 0
+            };
+            debts.splice(i, 1);
+            i--;
+        }
+        else {
+            d.amount -= d.relief;
+            yearData.uitgaven.debts[d.type] = {
+                total: d.relief + d.amount * d.interest * 0.01,
+                relief: d.relief,
+                interest: d.amount * d.interest * 0.01
+            };
+            yearData.vermogen.debts += d.amount;
+        }
+        yearData.uitgaven.debts.total += yearData.uitgaven.debts[d.type].total;
+    }
 }
 
 
