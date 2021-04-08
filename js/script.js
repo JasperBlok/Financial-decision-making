@@ -16,10 +16,11 @@ const svgTot = d3.select("#line_total");
 const btnStart = d3.select("button");
 
 // create Time graph elements
-const axisContainer = svgTime.append("g");
-const xAxis = axisContainer.append("g");
-const yAxis = axisContainer.append("g");
-const pathContainer = axisContainer.append("g");
+const axisContainer = svgTime.append("g").attr("id", "axisContainer");
+const xAxis = axisContainer.append("g").attr("id", "xAxis");
+const yAxis = axisContainer.append("g").attr("id", "yAxis");
+const pathContainer = axisContainer.append("g").attr("id", "pathContainer");
+const labelContainer = axisContainer.append("g").attr("id", "labelContainer");
 
 // Data variables
 let dataJaarinkomen;
@@ -49,6 +50,17 @@ const house = {
     TWEE_ONDER_EEN_KAP: "twee_onder_een_kap",
     VRIJSTAAND: "vrijstaand"
 }
+const belegging = {
+    AANDEEL: "aandelen",
+    VASTGOED: "vastgoed",
+    STAAT: "staatsobligaties",
+    BEDRIJF: "bedrijfsobligaties"
+}
+const risico = {
+    LAAG: 0,
+    GEMIDDELD: 2,
+    HOOG: 10
+}
 
 // Scales
 let xScale = getLinearScale(startLeeftijd, startLeeftijd + 1, 0, width - margin.left - margin.right);
@@ -57,7 +69,7 @@ const lineValues = d3.line()
     .x((d) => { return xScale(d.year); })
     .y((d) => { return yScale(d.total); });
 let yMin = 0;
-let yMax = 0;
+let yMax = 1000000;
 
 // retrieve data
 (async function () {
@@ -95,6 +107,11 @@ function initializeGraph() {
 
     // De nederlander heeft gemiddeld een woonoppervlak van 65 m2 https://www.beaufortmakelaars.nl/nederlander-heeft-gemiddeld-65-m2-woonoppervlakte/.
     // first general profile
+    setProfiles();
+}
+
+
+function setProfiles() {
     data.push(
         createProfile("average", true)
             .addPerson("m", true, 40, 18)
@@ -105,19 +122,26 @@ function initializeGraph() {
             .setZorgverzekering(true, 0, false)
             .setOverigVerzekering(38)
             .setRecreationBudget(100, 300, 10, 20),
-        createProfile("average", false)
+        createProfile("belegger", false)
             .addPerson("m", true, 40, 18)
             .addHouse(house.TUSSENWONING, 314000, 113.40, true, true)
             .setZorgverzekering(true, 0, true)
             .setOverigVerzekering(0)
-            .setRecreationBudget(100, 150, 5, 15),
+            .setRecreationBudget(100, 150, 5, 15)
+            .setBelegRisico(risico.GEMIDDELD),
         createProfile("house", false)
             .addPerson("m", true, 40, 18)
             //.addHouse(house.TUSSENWONING, 314000, 113.40, false, true)
             .setZorgverzekering(false, 500, false)
             .setOverigVerzekering(36)
             .setRecreationBudget(100, 200, 5, 30),
-    )
+        createProfile("house2", false)
+            .addPerson("m", true, 40, 18)
+            //.addHouse(house.TUSSENWONING, 314000, 113.40, false, true)
+            .setZorgverzekering(false, 500, false)
+            .setOverigVerzekering(36)
+            .setRecreationBudget(100, 200, 5, 30),
+    );
 }
 
 
@@ -133,24 +157,73 @@ function startVis() {
 }
 
 
+function restart() {
+    // stop current ticks
+    clearInterval(tickInterval);
+    tickInterval = null;
+    
+    // reset variables
+    yMax = 1000000;
+    data = []
+    setProfiles();
+    
+    // start visualization
+    startVis()
+}
+
+
 function tick() {
+    if (data[0].data.length === 50) {
+        clearInterval(tickInterval);
+        tickInterval = null;
+    }
+    const costPerM2 = 365000 / +dataUitgaven.woninghuur.oppervlak.woonhuizen;
+
     // Do calculations for every profile
     for (let i = 0; i < data.length; i++) {
         let entry = data[i];
         let values = createYearData(entry.data[entry.data.length - 1].year + 1, entry.data[entry.data.length - 1].savings, entry.data[entry.data.length - 1].pension);
-
-
+        
+        // the average price of a house is 365.000 :https://www.nvm.nl/nieuws/2021/cijfers-vierde-kwartaal/#:~:text=14%20januari%202021-,De%20verkoopprijs%20van%20de%20gemiddelde%20verkochte%20woning%20in%20het%20bestaande,een%20jaar%20boven%20de%2011%25.
+        // with the average surface area being dataUitgaven.uitgaven.woninghuur.oppervlak.woonhuizen (=113,40 m2),
+        // the average price per m2 would be 365.000 / 113,40 = 3.218,69...
+        // we are using this price calculation for determining how much a house will cost, plus a small factor of randomness.
+        
+        
+        let cost = 365000;
         // changes to the profile
         switch (entry.profile) {
             case "house":
-                let cost = 365000
-                if (values.savings == cost / 10) {
+                if (values.savings >= cost / 10 && entry.bezittingen.houses.length === 0) {
                     let relief = cost / 30
                     buyHouse(entry, values, house.TUSSENWONING, cost, 113.40, 10, relief)
                     entry.bezittingen.houses.forEach(h => {
                         h.living = false;
                     })
                     entry.bezittingen.houses[entry.bezittingen.houses.length -1].living = true;
+                }
+                break;
+            case "house2":
+                if (values.savings >= cost / 20 && entry.bezittingen.houses.length === 0) {
+                    let relief = cost / 30
+                    buyHouse(entry, values, house.TUSSENWONING, cost, 113.40, 20, relief)
+                    entry.bezittingen.houses.forEach(h => {
+                        h.living = false;
+                    })
+                    entry.bezittingen.houses[entry.bezittingen.houses.length -1].living = true;
+                }
+                break;
+            case "belegger":
+                if (entry.beleggingen[belegging.AANDEEL] > 20000) {
+                    let inleg = 5000;
+                    //values.savings += entry.beleggingen[belegging.AANDEEL] * 0.01;
+                    //entry.beleg(false, entry.beleggingen[belegging.AANDEEL] * 0.01, belegging.AANDEEL);
+                    entry.beleg(true, inleg, belegging.AANDEEL);
+                    values.savings -= inleg;
+                }
+                else if (values.savings > 5000) {
+                    entry.beleg(true, values.savings - 5000, belegging.AANDEEL);
+                    values.savings -= (values.savings - 5000);
                 }
                 break;
             default:
@@ -179,6 +252,10 @@ function tick() {
         });
         // omdat deze persoonsgebonden zijn maar één keer tellen en dus niet in de loop toevoegen
         values.uitgaven.huiskosten.total += values.uitgaven.huiskosten.water + values.uitgaven.huiskosten.elektriciteit;        
+
+
+        // rendement op aandelen uitkeren
+        calcInvestmentInterest(entry.beleggingen)
 
 
         // inkomsten berekenen
@@ -219,11 +296,12 @@ function tick() {
         // vermogen in bezittingen berekenen
         values.vermogen.cars = calcAutoVermogen(entry.bezittingen.cars);
         values.vermogen.houses = calcHuisVermogen(entry.bezittingen.houses);
-        values.vermogen.total = values.vermogen.total + values.vermogen.cars + values.vermogen.houses - values.vermogen.debts;
+        values.vermogen.beleggingen = calcInvestmentCapital(entry.beleggingen);
+        values.vermogen.total = values.vermogen.total + values.vermogen.cars + values.vermogen.houses + values.vermogen.beleggingen - values.vermogen.debts;
 
 
 
-        // inkomsten en uitgavne optellen
+        // inkomsten en uitgaven optellen
         values.savings += values.inkomsten.total - values.uitgaven.total
         // spaarrente berkenen
         values.inkomsten.spaarrente = calcSpaarrente(values.savings)
@@ -239,12 +317,10 @@ function tick() {
 
     console.log(data)
 
-    let tempData = data[0].data;
-
     xAxis.transition()
         .duration(speed)
         .ease(d3.easeLinear)
-        .call(d3.axisBottom(xScale.domain([startLeeftijd, tempData.length + startLeeftijd - 1])));
+        .call(d3.axisBottom(xScale.domain([startLeeftijd, data[0].data.length + startLeeftijd - 1])));
 
     yAxis.transition()
         .duration(speed)
@@ -273,6 +349,8 @@ function tick() {
         .attrTween("d", function (d) {
             return pathTween(lineValues(d.data), 1, this)()
         });
+
+    let labels = labelContainer.selectAll("div").data(data);
 }
 
 
@@ -377,6 +455,13 @@ function createProfile(name, married) {
             cars: [],
             other: []
         },
+        beleggingen: {
+            risico: risico.GEMIDDELD,
+            aandelen: 0,
+            vastgoed: 0,
+            staatsobligaties: 0,
+            bedrijfsobligaties: 0
+        },
         debts: [],
         verzekeringen: {
             zorgverzekering: {
@@ -422,10 +507,10 @@ function createProfile(name, married) {
             })
             return this;
         },
-        setZorgverzekering: function (resitutie, risico, collectief) {
+        setZorgverzekering: function (resitutie, eigenRisico, collectief) {
             this.verzekeringen.zorgverzekering = {
                 type: `${resitutie ? "resitutie" : "natura"}`,
-                vrijwillig_risico: risico,
+                vrijwillig_risico: eigenRisico,
                 collectief: collectief
             }
             return this;
@@ -439,6 +524,22 @@ function createProfile(name, married) {
             this.recreation.min_percent = min_percent;
             this.recreation.max = max;
             this.recreation.max_percent = max_percent;
+            return this;
+        },
+        setBelegRisico: function (risk) {
+            this.beleggingen.risico = risk;
+            return this;
+        },
+        beleg: function (add, amount, type) {
+            if (add) {
+                this.beleggingen[type] += amount
+            }
+            else if (this.beleggingen[type] >= amount){
+                this.beleggingen[type] -= amount
+            }
+            else {
+                console.warn(`the amount that was tried to retrieve (${amount}) is more than what was available (${this.beleggingen[type]})`)
+            }
             return this;
         }
     }
@@ -494,7 +595,6 @@ function buyHouse(profile, yearData, type, worth, oppervlak, percent_payed, reli
         return;
     }
     let payed = worth * percent_payed * 0.01;
-    console.log(worth);
     profile.addHouse(type, worth, oppervlak, false, false)
         .addDebt("huishypotheek", worth - payed, getNum(100, 200) / 100, relief);
     yearData.uitgaven.huiskosten.huisaankoop = payed;
@@ -540,6 +640,20 @@ function calcKinderbijslag(people) {
 function calcSpaarrente(savings) {
     // the average interest on savings is 0.05%: https://blog.spaarrente.nl/gemiddelde-rente-spaarrekening#:~:text=Gemiddelde%20rente%20spaarrekening%20en%20deposito,-Door%20Redactie%20Spaarrente&text=Voor%20een%20vrij%20opneembare%20spaarrekening,jaars%20deposito%3A%200%2C38%25
     return savings < 0 ? 0 : savings * 0.0005;
+}
+
+
+// returns interest on invesments
+function calcInvestmentInterest(investments) {
+    const dataBelegging = dataInkomsten.belegging;
+    const risk = investments.risico;
+    const rngInterest = (dataObj) => {
+        return getNum((dataObj.onder - risk) * 100, (dataObj.boven + risk) * 100) * 0.0001;
+    } 
+    investments[belegging.AANDEEL] += investments[belegging.AANDEEL] * rngInterest(dataBelegging.aandelen);
+    investments[belegging.VASTGOED] += investments[belegging.VASTGOED] * rngInterest(dataBelegging.vastgoed);
+    investments[belegging.STAAT] += investments[belegging.STAAT] * rngInterest(dataBelegging.obligaties.staat);
+    investments[belegging.BEDRIJF] += investments[belegging.BEDRIJF] * rngInterest(dataBelegging.obligaties.bedrijf);
 }
 
 
@@ -738,6 +852,12 @@ function calcHuisVermogen(houses, includeLiving = true) {
         }
     });
     return tot;
+}
+
+
+// returns total worth of all investments combined
+function calcInvestmentCapital(investments) {
+    return investments[belegging.AANDEEL] + investments[belegging.VASTGOED] + investments[belegging.STAAT] + investments[belegging.BEDRIJF];
 }
 
 

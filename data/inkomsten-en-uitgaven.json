@@ -5,6 +5,32 @@
             "tot5": 223.37,
             "tot11": 271.24,
             "tot17": 319.10
+        },
+        "belegging": {
+            "omschrijving": "Het gemiddelde rendement (in %) van verschillende types beleggingen. Het is bij beleggingen belangrijk dat gekeken wordt naar een lange periode.",
+            "bron": "https://deonlinebelegger.nl/gemiddeld-rendement",
+            "aandelen": {
+                "onder": 6,
+                "boven": 8,
+                "gemiddeld": 7
+            },
+            "vastgoed": {
+                "onder": 4,
+                "boven": 8,
+                "gemiddeld": 6
+            },
+            "obligaties": {
+                "staat": {
+                    "onder": 3,
+                    "boven": 5,
+                    "gemiddeld": 4
+                },
+                "bedrijf": {
+                    "onder": 4,
+                    "boven": 7,
+                    "gemiddeld": 5.5
+                }
+            }
         }
     },
     "uitgaven": {
@@ -267,6 +293,13 @@
                     }
                 ]
             }
+        },
+        "inflatie": {
+            "omschrijving": "De gemiddelde inflatie van prijzen in Nederland",
+            "bron": "https://deonlinebelegger.nl/gemiddeld-rendement",
+            "onder": 2,
+            "boven": 4,
+            "gemiddeld": 3
         }
     }
 }
