@@ -114,7 +114,7 @@ function initializeGraph() {
         createProfile("house", false)
             .addPerson("m", true, 40, 18)
             //.addHouse(house.TUSSENWONING, 314000, 113.40, false, true)
-            .setZorgverzekering(false, 0, false)
+            .setZorgverzekering(false, 500, false)
             .setOverigVerzekering(36)
             .setRecreationBudget(100, 200, 5, 30),
     )
@@ -143,8 +143,10 @@ function tick() {
         // changes to the profile
         switch (entry.profile) {
             case "house":
-                if (values.year == 25) {
-                    buyHouse(entry, values, house.TUSSENWONING, entry.savings * 10, 113.40, 10, entry.savings * 10 / 30)
+                let cost = 365000
+                if (values.savings == cost / 10) {
+                    let relief = cost / 30
+                    buyHouse(entry, values, house.TUSSENWONING, cost, 113.40, 10, relief)
                     entry.bezittingen.houses.forEach(h => {
                         h.living = false;
                     })
@@ -180,7 +182,7 @@ function tick() {
 
 
         // inkomsten berekenen
-        values.inkomsten.salaries = calcSalaries(entry.people);
+        values.inkomsten.salaries = calcSalaries(entry.people) * 12;
         // geld opzij gezet voor pension van salaris. Meestal wordt rond de 20% opzij gezet van het salaris. https://www.rabobank.nl/particulieren/pension/vuistregels-pension
         let pension = values.inkomsten.salaries * 0.2;
         values.pension += pension;
@@ -492,6 +494,7 @@ function buyHouse(profile, yearData, type, worth, oppervlak, percent_payed, reli
         return;
     }
     let payed = worth * percent_payed * 0.01;
+    console.log(worth);
     profile.addHouse(type, worth, oppervlak, false, false)
         .addDebt("huishypotheek", worth - payed, getNum(100, 200) / 100, relief);
     yearData.uitgaven.huiskosten.huisaankoop = payed;
@@ -556,7 +559,7 @@ function calcRecreatieUitgaven(inkomsten, uitgaven, border) {
 }
 
 
-// returns the costs for food per month
+// returns the costs for food per year
 function calcVoedingskosten(people) {
     let tot = 0;
     let dataVoeding = dataUitgaven.voeding;
