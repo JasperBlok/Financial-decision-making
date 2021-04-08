@@ -5,9 +5,9 @@ const width = 500;
 const height = 300;
 const margin = {
     top: 30,
-    right: 50,
+    right: 70,
     bottom: 30,
-    left: 60
+    left: 70
 }
 
 // Element references
@@ -20,7 +20,6 @@ const axisContainer = svgTime.append("g").attr("id", "axisContainer");
 const xAxis = axisContainer.append("g").attr("id", "xAxis");
 const yAxis = axisContainer.append("g").attr("id", "yAxis");
 const pathContainer = axisContainer.append("g").attr("id", "pathContainer");
-const labelContainer = axisContainer.append("g").attr("id", "labelContainer");
 
 // Data variables
 let dataJaarinkomen;
@@ -113,7 +112,7 @@ function initializeGraph() {
 
 function setProfiles() {
     data.push(
-        createProfile("average", true)
+        createProfile("couple", true)
             .addPerson("m", true, 40, 18)
             .addPerson("v", true, 30, 18)
             .addPerson("m", false, 0, 2)
@@ -214,17 +213,11 @@ function tick() {
                 }
                 break;
             case "belegger":
-                if (entry.beleggingen[belegging.AANDEEL] > 20000) {
-                    let inleg = 5000;
-                    //values.savings += entry.beleggingen[belegging.AANDEEL] * 0.01;
-                    //entry.beleg(false, entry.beleggingen[belegging.AANDEEL] * 0.01, belegging.AANDEEL);
-                    entry.beleg(true, inleg, belegging.AANDEEL);
-                    values.savings -= inleg;
-                }
-                else if (values.savings > 5000) {
-                    entry.beleg(true, values.savings - 5000, belegging.AANDEEL);
-                    values.savings -= (values.savings - 5000);
-                }
+                let inleg = values.savings * 0.10;
+                inleg = values.savings - inleg < 5000 ? values.savings - 5000 : inleg;
+                inleg = inleg < 0 ? 0 : inleg;
+                entry.beleg(true, inleg, belegging.AANDEEL);
+                values.savings -= inleg;
                 break;
             default:
                 break;
@@ -328,18 +321,26 @@ function tick() {
         .call(d3.axisLeft(yScale.domain([yMax, yMin])));
 
 
-    let paths = pathContainer.selectAll("path").data(data);
+    let lines = pathContainer.selectAll("g").data(data);
 
-    let update = paths.transition()
+    // update
+    lines.select("path").transition()
         .duration(speed)
         .ease(d3.easeLinear)
         .attrTween("d", function (d) {
             return pathTween(lineValues(d.data), 1, this)()
         });
-
-    let enter = paths.enter()
-        .append("path")
+    lines.select("text").transition()
+        .duration(speed)
+        .ease(d3.easeLinear)
+        .attr("x", (d) => {return xScale(d.data[d.data.length - 1].year) + 5; })
+        .attr("y", (d) => {return yScale(d.data[d.data.length - 1].total) + 5; })
+    
+    // enter
+    let enter = lines.enter()
+        .append("g")
         .attr("id", (d) => { return `${d.profile}` })
+    enter.append("path")
         .classed("line", true)
         .attr("d", `M${xScale(0)},${yScale(0)} L${xScale(0)},${yScale(0)}`)
         .style("stroke", (d, i) => { return colors[i]; })
@@ -349,8 +350,19 @@ function tick() {
         .attrTween("d", function (d) {
             return pathTween(lineValues(d.data), 1, this)()
         });
-
-    let labels = labelContainer.selectAll("div").data(data);
+    enter.append("text")
+        .classed("label", true)
+        .html((d) => {return `${d.profile}`; })
+        //.style("stroke", (d, i) => { return colors[i]; })
+        .style("fill", (d, i) => { return colors[i]; })
+        .transition()
+        .duration(speed)
+        .ease(d3.easeLinear)
+        .attr("x", (d) => {return xScale(d.data[d.data.length - 1].year) + 10; })
+        .attr("y", (d) => {return yScale(d.data[d.data.length - 1].total); })
+    
+    // exit
+    let exit = lines.exit().remove();
 }
 
 

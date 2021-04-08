@@ -15,3 +15,7 @@ svg {
     /* stroke: steelblue; */
     stroke-width: 1.5;
 }
+
+.label {
+    /* position: absolute; */
+}
