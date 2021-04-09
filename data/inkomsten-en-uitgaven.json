@@ -300,6 +300,17 @@
             "onder": 2,
             "boven": 4,
             "gemiddeld": 3
+        },
+        "recreatie": {
+            "omschrijving": "hoeveel % van het inkomen een gemiddeld huishouden uitgeeft aan recreatie per jaar",
+            "bron": "https://www.cbs.nl/nl-nl/nieuws/2015/28/huishoudens-besteden-jaarlijks-6-duizend-euro-aan-ontspanning#:~:text=Huishoudens%20geven%206%20duizend%20euro,uit%20nieuwe%20cijfers%20van%20CBS",
+            "totaal": 18,
+            "vakanties": 37.1,
+            "spellen_planten_huisdieren": 9.8,
+            "audio_video_fotoapparatuur": 7.6,
+            "boeken_tijdschriften_goederen_sport_cultuur": 7.5,
+            "horeca": 21.7,
+            "diensten_recreatie_sport_cultuur": 16.3
         }
     }
 }
