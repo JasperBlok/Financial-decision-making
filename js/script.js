@@ -120,26 +120,26 @@ function setProfiles() {
             .addCar(car.MINI_KLASSE, 8000)
             .setZorgverzekering(true, 0, false)
             .setOverigVerzekering(38)
-            .setRecreationBudget(100, 300, 10, 20),
+            .setRecreationBudget(200, 300, 17, 19),
         createProfile("belegger", false)
             .addPerson("m", true, 40, 18)
             .addHouse(house.TUSSENWONING, 314000, 113.40, true, true)
             .setZorgverzekering(true, 0, true)
             .setOverigVerzekering(0)
-            .setRecreationBudget(100, 150, 5, 15)
+            .setRecreationBudget(100, 150, 17, 19)
             .setBelegRisico(risico.GEMIDDELD),
         createProfile("house", false)
             .addPerson("m", true, 40, 18)
             //.addHouse(house.TUSSENWONING, 314000, 113.40, false, true)
             .setZorgverzekering(false, 500, false)
             .setOverigVerzekering(36)
-            .setRecreationBudget(100, 200, 5, 30),
+            .setRecreationBudget(100, 200, 17, 19),
         createProfile("house2", false)
             .addPerson("m", true, 40, 18)
             //.addHouse(house.TUSSENWONING, 314000, 113.40, false, true)
             .setZorgverzekering(false, 500, false)
             .setOverigVerzekering(36)
-            .setRecreationBudget(100, 200, 5, 30),
+            .setRecreationBudget(100, 200, 17, 19),
     );
 }
 
@@ -344,6 +344,7 @@ function tick() {
         .classed("line", true)
         .attr("d", `M${xScale(0)},${yScale(0)} L${xScale(0)},${yScale(0)}`)
         .style("stroke", (d, i) => { return colors[i]; })
+        .on("click", selectLine)
         .transition()
         .duration(speed)
         .ease(d3.easeLinear)
@@ -371,6 +372,17 @@ function getLinearScale(minData, maxData, minRange, maxRange) {
         .domain([minData, maxData])
         .range([minRange, maxRange]);
     return scale;
+}
+
+
+function selectLine(e, d) {
+    console.log("click! ", e, d, this);
+    d3.select(".selected")
+        .classed("selected", false)
+        .style("stroke-width", null);
+    d3.select(this)
+        .classed("selected", true)
+        .style("stroke-width", 3);
 }
 
 
