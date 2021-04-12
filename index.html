@@ -8,6 +8,8 @@
     <title>Financial Pension Decision making</title>
 
     <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.gstatic.com">
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&family=Open+Sans:ital,wght@0,300;0,400;0,600;0,700;0,800;1,300;1,400;1,600;1,700;1,800&family=Vollkorn:ital,wght@0,400;0,500;0,600;0,700;0,800;0,900;1,400;1,500;1,600;1,700;1,800;1,900&display=swap" rel="stylesheet">
 
     <!-- Stylesheets -->
     <link rel="stylesheet" href="css/reset.css">
@@ -25,11 +27,86 @@
 </head>
 
 <body>
-    <svg id="time_chart"></svg>
-    <button onclick="startVis()" disabled>start</button>
-    <button onclick="tick()">tick</button>
-    <button onclick="restart()">restart</button>
-    <svg id="line_total"></svg>
+    <h1>De pensioenrace</h1>
+    <div class="col intro-container">
+        <p class="intro">Veel mensen beginnen pas te laat met nadenken en sparen voor hun pensioen. Hierdoor zitten zij er krapper 
+            bij op het moment dat zij met pensioen gaan, dan dat zij misschien gewild hadden. Hieronder is in een versimpeld model 
+            van de werkelijkheid weergeven hoe mensen op verschillende manieren kunnen sparen voor hun pensioen. Let op dat dit model 
+            niet gemaakt is om spaarbeslissingen op te maken. Voor het maken van beslissingen over jou pensioen wordt geadviseerd om 
+            met een echte professional te praten.</p>
+        <img src="svg/piggy_bank.svg" alt="">
+        <div class="arrow"></div>
+    </div>
+    <div class="col graph-container">
+        <div class="graph">
+            <svg id="time_chart"></svg>
+            <button onclick="startVis()" disabled>start</button>
+            <button onclick="tick()">tick</button>
+            <button onclick="restart()">restart</button>
+            <div class="arrow"></div>
+        </div>
+        <div class="profiel">
+            <!-- <h2>Selecteer een lijn</h2> -->
+            <h2>De Belegger</h2>
+            <p class="profieltekst">
+                <!-- Selecteer een lijn voor meer uitleg over die manier van sparen. -->
+                De belegger stopt iedere maand een gedeelte van zijn geld in beleggingen. Beleggen wordt over het algemeen als de 
+                meest rendabele vorm van sparen gezien, maar aan beleggen zitten wel risico's verbonden. Als bijvoorbeeld het aandeel
+                van een bedrijf waar jij veel aandelen van hebt in waarde verminderd en jij deze aandelen verkoopt, verlies je geld.
+                Als je minder risico wilt lopen bij beleggen, kan je bijvoorbeeld beleggen in een beleggingsfonds. Beleggingsfondsen
+                kopen en verkopen aandelen van verschillende bedrijven in verschillende sectoren, om zo het risico te spreiden. Dit
+                betekent dat beleggingsfondsen vaak wel minder rendabel zijn dan wanneer jij zelf slim weet te beleggen. Als je belegt
+                in aandelen, zijn er sommige bedrijven die ieder jaar een deel van hun winst uitkeren aan hun aandeelhouders in de
+                vorm van divident. Veel mensen die beleggen, gebruiken hun ontvangen divident om meer van het aandeel te kopen.
+                Dit zorgt voor een rente-op-rente effect, wat op de lange termijn veel geld op kan leveren.
+            </p>
+        </div>
+        
+    </div>
+    <div class="fraction-container">
+        <h2>Waaruit bestaat de spaarpot?</h2>
+        <div class="col hor-container">
+            <div class="fraction">
+                <div class="arrow"></div>
+                <h3>Spaargeld</h3>
+                <p class="bedrag">percentage van totale pensioengeld</p>
+                <img src="svg/piggy_bank.svg" alt=""></img>
+                <p class="bedrag">absolute geldwaarde</p>
+            </div>
+            <div class="fraction">
+                <h3>Pensioenfonds / pensioenregeling</h3>
+                <p class="bedrag">percentage van totale pensioengeld</p>
+                <img src="svg/piggy_bank.svg" alt=""></img>
+                <p class="bedrag">absolute geldwaarde</p>
+            </div>
+            <div class="fraction">
+                <h3>Beleggingen</h3>
+                <p class="bedrag">percentage van totale pensioengeld</p>
+                <img src="svg/piggy_bank.svg" alt=""></img>
+                <p class="bedrag">absolute geldwaarde</p>
+            </div>
+        </div>
+        <div class="col hor-container">
+            <div class="fraction">
+                <h3>Vastgoed</h3>
+                <p class="bedrag">percentage van totale pensioengeld</p>
+                <img src="svg/piggy_bank.svg" alt=""></img>
+                <p class="bedrag">absolute geldwaarde</p>
+            </div>
+            <div class="fraction">
+                <h3>Schulden</h3>
+                <p class="bedrag">percentage van totale pensioengeld</p>
+                <img src="svg/piggy_bank.svg" alt=""></img>
+                <p class="bedrag">absolute geldwaarde</p>
+            </div>
+            <div class="fraction">
+                <h3>Inflatie</h3>
+                <p class="bedrag">percentage van totale pensioengeld</p>
+                <img src="svg/piggy_bank.svg" alt=""></img>
+                <p class="bedrag">absolute geldwaarde</p>
+            </div>
+        </div>
+    </div>
 
     <!-- Scripts -->
     <script src="js/script.js"></script>

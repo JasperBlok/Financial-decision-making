@@ -97,7 +97,7 @@ function initializeGraph() {
     svgTime.attr("viewBox", `0 0 ${width} ${height}`);
 
     axisContainer.attr("transform", `translate(${margin.left}, ${margin.top})`)
-        .style("color", "darkblue");
+        .style("color", "white");
 
     xAxis.attr("transform", `translate(0, ${height - margin.top - margin.bottom})`)
         .call(d3.axisBottom(xScale));
@@ -354,7 +354,6 @@ function tick() {
     enter.append("text")
         .classed("label", true)
         .html((d) => {return `${d.profile}`; })
-        //.style("stroke", (d, i) => { return colors[i]; })
         .style("fill", (d, i) => { return colors[i]; })
         .transition()
         .duration(speed)
