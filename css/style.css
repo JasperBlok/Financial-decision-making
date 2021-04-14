@@ -4,9 +4,11 @@ body {
 }
 
 svg {
-    background-color: #B7E4C7;
+    position: relative;
+    
     width: 100%;
     height: auto;
+    z-index: 2;
 }
 
 h1 {
@@ -92,6 +94,7 @@ img {
     transform: rotate(45deg);
     top: 55px;
     right: -50px;
+    z-index: 1;
     background: #B7E4C7;
     border-radius: 10px;
     width: 120px;
@@ -99,11 +102,25 @@ img {
 }
 
 .profiel {
+    position: relative;
     padding-top: 75px;
     padding-bottom: 75px;
     padding-left: 80px;
     padding-right: 100px;
     background: #40916C;
+}
+
+.profiel .arrow {
+    position: absolute;
+    transform-origin: center;
+    transform: rotate(45deg);
+    bottom: -50px;
+    left: 50px;
+    z-index: 1;
+    background: #40916C;
+    border-radius: 10px;
+    width: 120px;
+    height: 120px;
 }
 
 .fraction-container {
@@ -123,7 +140,7 @@ img {
     grid-template-rows: 150px 75px 1fr 75px;
 }
 
-.fraction .arrow {
+/* .fraction .arrow {
     position: absolute;
     transform-origin: center;
     transform: rotate(45deg);
@@ -134,7 +151,7 @@ img {
     border-radius: 10px;
     width: 120px;
     height: 120px;
-}
+} */
 
 .intro {
     color: white;
@@ -155,11 +172,13 @@ img {
 }
 
 .profieltekst {
+    position: relative;;
     color: white;
     font-family: 'Open Sans', sans-serif;
     font-size: 24px;
     font-weight: 400;
     line-height: 1.5;
+    z-index: 2;
 }
 
 .bedrag {
@@ -169,4 +188,8 @@ img {
     font-family: 'Montserrat', sans-serif;
     font-size: 50px;
     font-weight: 200;
+}
+
+#time-chart {
+    background-color: #B7E4C7;
 }

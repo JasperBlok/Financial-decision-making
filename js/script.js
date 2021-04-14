@@ -35,6 +35,7 @@ const eindLeeftijd = 67
 let speed = 500;
 let tickInterval = null;
 const colors = ["#ff595e", "#ffca3a", "#8ac926", "#1982c4", "#6a4c93"];
+let selected = null; 
 
 // Enumerators
 const car = {
@@ -70,6 +71,39 @@ const lineValues = d3.line()
 let yMin = 0;
 let yMax = 1000000;
 
+// Profielteksten
+const profielteksten = {
+    belegger: {
+        h: "De belegger",
+        tekst: "De belegger stopt iedere maand een gedeelte van zijn geld in beleggingen. Beleggen wordt over het algemeen als de " +
+            "meest rendabele vorm van sparen gezien, maar aan beleggen zitten wel risico's verbonden. Als bijvoorbeeld het aandeel" +
+            "van een bedrijf waar jij veel aandelen van hebt in waarde verminderd en jij deze aandelen verkoopt, verlies je geld." +
+            "Als je minder risico wilt lopen bij beleggen, kan je bijvoorbeeld beleggen in een beleggingsfonds. Beleggingsfondsen" +
+            "kopen en verkopen aandelen van verschillende bedrijven in verschillende sectoren, om zo het risico te spreiden. Dit" +
+            "betekent dat beleggingsfondsen vaak wel minder rendabel zijn dan wanneer jij zelf slim weet te beleggen. Als je belegt" +
+            "in aandelen, zijn er sommige bedrijven die ieder jaar een deel van hun winst uitkeren aan hun aandeelhouders in de" +
+            "vorm van divident. Veel mensen die beleggen, gebruiken hun ontvangen divident om meer van het aandeel te kopen." +
+            "Dit zorgt voor een rente-op-rente effect, wat op de lange termijn veel geld op kan leveren."
+    },
+    huis: {
+        h: "huis",
+        tekst: "De belegger stopt iedere maand een gedeelte van zijn geld in beleggingen. Beleggen wordt over het algemeen als de " +
+            "meest rendabele vorm van sparen gezien, maar aan beleggen zitten wel risico's verbonden. Als bijvoorbeeld het aandeel" +
+            "van een bedrijf waar jij veel aandelen van hebt in waarde verminderd en jij deze aandelen verkoopt, verlies je geld." +
+            "Als je minder risico wilt lopen bij beleggen, kan je bijvoorbeeld beleggen in een beleggingsfonds. Beleggingsfondsen" +
+            "kopen en verkopen aandelen van verschillende bedrijven in verschillende sectoren, om zo het risico te spreiden. Dit" +
+            "betekent dat beleggingsfondsen vaak wel minder rendabel zijn dan wanneer jij zelf slim weet te beleggen. Als je belegt" +
+            "in aandelen, zijn er sommige bedrijven die ieder jaar een deel van hun winst uitkeren aan hun aandeelhouders in de" +
+            "vorm van divident. Veel mensen die beleggen, gebruiken hun ontvangen divident om meer van het aandeel te kopen." +
+            "Dit zorgt voor een rente-op-rente effect, wat op de lange termijn veel geld op kan leveren."
+    }
+};
+
+
+
+
+
+
 // retrieve data
 (async function () {
     dataJaarinkomen = await d3.csv("data/gemiddeld-persoonlijk-jaarinkomen-per-1000-euro-2017.csv");
@@ -87,6 +121,17 @@ let yMax = 1000000;
     console.log(dataUurlonen);
     console.log(dataInkomsten);
     console.log(dataUitgaven);
+
+    // d3.xml("svg/piggy_bank.svg")
+    //     .then(data => {
+    //         d3.select(".fraction-container").selectAll("div").nodes().forEach(n => {
+    //             console.log(n)
+    //             d3.select(n).selectAll("div").nodes().forEach(d => {
+    //                 d.append(data.documentElement.cloneNode(true))
+    //             })
+    //         })
+    //     });
+
 
     // set graph attributes
     initializeGraph();
@@ -127,7 +172,8 @@ function setProfiles() {
             .setZorgverzekering(true, 0, true)
             .setOverigVerzekering(0)
             .setRecreationBudget(100, 150, 17, 19)
-            .setBelegRisico(risico.GEMIDDELD),
+            .setBelegRisico(risico.GEMIDDELD)
+            .setProfieltekst(profielteksten.belegger.h, profielteksten.belegger.tekst),
         createProfile("house", false)
             .addPerson("m", true, 40, 18)
             //.addHouse(house.TUSSENWONING, 314000, 113.40, false, true)
@@ -363,6 +409,11 @@ function tick() {
     
     // exit
     let exit = lines.exit().remove();
+
+    if  (selected != null) {
+        //TODO: reselect selection on restart!
+        updateCards();        
+    }
 }
 
 
@@ -374,6 +425,7 @@ function getLinearScale(minData, maxData, minRange, maxRange) {
 }
 
 
+// sets the selected profile
 function selectLine(e, d) {
     console.log("click! ", e, d, this);
     d3.select(".selected")
@@ -382,6 +434,53 @@ function selectLine(e, d) {
     d3.select(this)
         .classed("selected", true)
         .style("stroke-width", 3);
+    
+    d3.select(".profielnaam").html(d.profieltekst.h);
+    d3.select(".profieltekst").html(d.profieltekst.p);
+    selected = d;
+    updateCards();
+}
+
+
+//sets all the fractioned data cards
+function updateCards() {
+    let sizeScale = getLinearScale(0, 250, 0, 500)
+
+    let d = selected.data[selected.data.length-1];
+    const pr = (value) => {
+        return Math.round(value / d.total * 1000) / 10;
+    }
+    const ab = (value) => {
+        // return Math.round(value * 100) / 100;
+        return Math.round(value);
+    }
+
+    let sp = d3.select("#spaargeld")
+    sp.select(".percent").html(`${pr(d.savings)} %`)
+    sp.select("svg").select("use").attr("transform", `scale(${sizeScale(pr(d.savings))})`)
+    sp.select(".absolute").html(`€ ${ab(d.savings)}`)
+
+    let p = d3.select("#pensioen")
+    p.select(".percent").html(`${pr(d.pension)} %`)
+    p.select(".absolute").html(`€ ${ab(d.pension)}`)
+
+    let b = d3.select("#belegging")
+    b.select(".percent").html(`${pr(d.vermogen.beleggingen)} %`)
+    b.select(".absolute").html(`€ ${ab(d.vermogen.beleggingen)}`)
+
+    let v = d3.select("#vastgoed")
+    v.select(".percent").html(`${pr(d.vermogen.total + d.vermogen.debts - d.vermogen.beleggingen)} %`)
+    v.select(".absolute").html(`€ ${ab(d.vermogen.total + d.vermogen.debts - d.vermogen.beleggingen)}`)
+
+    let sc = d3.select("#schulden")
+    sc.select(".percent").html(`${pr(d.vermogen.debts)} %`)
+    sc.select(".absolute").html(`€ ${-ab(d.vermogen.debts)}`)
+
+    // gemiddelde inflatie per jaar is, sinds 1997 gemiddeld 1,92%: https://www.berekenhet.nl/modules/beleggen/inflatie.html#:~:text=De%20(gemiddelde)%20inflatie%20per%20jaar,1%2C92%25%20per%20jaar.
+    let inflatie = Math.pow(1.0192, selected.data.length);
+    let i = d3.select("#inflatie")
+    i.select(".percent").html(`${Math.round(inflatie * 1000)/10} %`)
+    i.select(".absolute").html(`€ ${Math.round(d.total / inflatie * 100)}`)
 }
 
 
@@ -495,6 +594,10 @@ function createProfile(name, married) {
             overige: 38
         },
         data: [createYearData(18, 0, 0)],
+        profieltekst: {
+            h: `${name}`,
+            p: "geen beschrijving beschikbaar"
+        },
         addPerson: function (gender, working, workhours, age) {
             this.people.push({
                 gender: gender,
@@ -553,6 +656,11 @@ function createProfile(name, married) {
             this.beleggingen.risico = risk;
             return this;
         },
+        setProfieltekst: function (header, text) {
+            this.profieltekst.h = header;
+            this.profieltekst.p = text;
+            return this;
+        },
         beleg: function (add, amount, type) {
             if (add) {
                 this.beleggingen[type] += amount
@@ -564,7 +672,7 @@ function createProfile(name, married) {
                 console.warn(`the amount that was tried to retrieve (${amount}) is more than what was available (${this.beleggingen[type]})`)
             }
             return this;
-        }
+        },
     }
     return profile;
 }
