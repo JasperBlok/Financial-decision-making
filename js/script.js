@@ -12,14 +12,16 @@ const margin = {
 
 // Element references
 const svgTime = d3.select("#time_chart");
-const svgTot = d3.select("#line_total");
 const btnStart = d3.select("button");
+const piggyBank = d3.select("path#piggy-bank");
 
 // create Time graph elements
 const axisContainer = svgTime.append("g").attr("id", "axisContainer");
+const sliderContainer = svgTime.append('g').attr("id", "sliderContainer")
 const xAxis = axisContainer.append("g").attr("id", "xAxis");
 const yAxis = axisContainer.append("g").attr("id", "yAxis");
 const pathContainer = axisContainer.append("g").attr("id", "pathContainer");
+
 
 // Data variables
 let dataJaarinkomen;
@@ -33,7 +35,9 @@ let data = [];
 const startLeeftijd = 18;
 const eindLeeftijd = 67
 let speed = 500;
+const sliderData = [-2, -1, 0, 1, 2]; // afspeelsnelheid slider, vb: https://bl.ocks.org/johnwalley/e1d256b81e51da68f7feb632a53c3518
 let tickInterval = null;
+let changeTickInterval = false;
 const colors = ["#ff595e", "#ffca3a", "#8ac926", "#1982c4", "#6a4c93"];
 let selected = null; 
 
@@ -100,10 +104,6 @@ const profielteksten = {
 };
 
 
-
-
-
-
 // retrieve data
 (async function () {
     dataJaarinkomen = await d3.csv("data/gemiddeld-persoonlijk-jaarinkomen-per-1000-euro-2017.csv");
@@ -138,16 +138,62 @@ const profielteksten = {
 })();
 
 
+// Initialize visualization
 function initializeGraph() {
     svgTime.attr("viewBox", `0 0 ${width} ${height}`);
 
     axisContainer.attr("transform", `translate(${margin.left}, ${margin.top})`)
-        .style("color", "white");
+        .style("color", "#1B4332");
 
     xAxis.attr("transform", `translate(0, ${height - margin.top - margin.bottom})`)
-        .call(d3.axisBottom(xScale));
+        .call(d3.axisBottom(xScale))
+        .style("font-family", "'Open Sans', sans-serif");
 
-    yAxis.call(d3.axisLeft(yScale));
+    yAxis.call(d3.axisLeft(yScale))
+        .style("font-family", "'Open Sans', sans-serif");
+
+    const sliderFill = d3.sliderBottom()
+        .min(d3.min(sliderData))
+        .max(d3.max(sliderData))
+        .width(150)
+        .ticks(0)
+        .default(0)
+        .displayValue(false)
+        .fill('#1B4332')
+        .handle(d3.symbol()
+            .type(d3.symbolCircle)
+            .size(100)())
+        .on('onchange', val => {
+            speed =  Math.round(500 / Math.pow(2, val));
+            changeTickInterval = true;
+        });
+
+    sliderContainer.attr('transform', 'translate(120, 10)');
+
+    sliderContainer.append("text")
+        .classed("slider-label", true)
+        .html("Afspeelsnelheid:")
+        .attr('transform', 'translate(-120, 5)');
+
+    sliderContainer.call(sliderFill);
+
+    d3.select("#spaargeld").select("svg").select("use")
+        .attr("transform", getTransform(piggyBank, 1))
+
+    d3.select("#pensioen").select("svg").select("use")
+        .attr("transform", getTransform(piggyBank, 1))
+
+    d3.select("#belegging").select("svg").select("use")
+        .attr("transform", getTransform(piggyBank, 1))
+
+    d3.select("#vastgoed").select("svg").select("use")
+        .attr("transform", getTransform(piggyBank, 1))
+
+    d3.select("#schulden").select("svg").select("use")
+        .attr("transform", getTransform(piggyBank, 1))
+
+    d3.select("#inflatie").select("svg").select("use")
+        .attr("transform", getTransform(piggyBank, 1))
 
     // De nederlander heeft gemiddeld een woonoppervlak van 65 m2 https://www.beaufortmakelaars.nl/nederlander-heeft-gemiddeld-65-m2-woonoppervlakte/.
     // first general profile
@@ -155,6 +201,7 @@ function initializeGraph() {
 }
 
 
+// creates the profiles and adds them to the data array
 function setProfiles() {
     data.push(
         createProfile("couple", true)
@@ -190,18 +237,20 @@ function setProfiles() {
 }
 
 
+// starts the visualization
 function startVis() {
     if (tickInterval != null) {
         clearInterval(tickInterval);
         tickInterval = null;
     }
     else {
-        tick();
         tickInterval = setInterval(tick, speed);
+        tick();
     }
 }
 
 
+// stops the ongoing visualization, resets variables and starts the visualization again
 function restart() {
     // stop current ticks
     clearInterval(tickInterval);
@@ -209,8 +258,16 @@ function restart() {
     
     // reset variables
     yMax = 1000000;
-    data = []
-    setProfiles();
+    data = [];
+    
+    if (selected != null) {
+        selected = selected.profile;
+        setProfiles();
+        data.map(p => p.profile == selected ? selected = p : null);
+    }
+    else {
+        setProfiles();
+    }
     
     // start visualization
     startVis()
@@ -218,201 +275,209 @@ function restart() {
 
 
 function tick() {
-    if (data[0].data.length === 50) {
+    if (data[0].data.length > 50) {
         clearInterval(tickInterval);
         tickInterval = null;
     }
-    const costPerM2 = 365000 / +dataUitgaven.woninghuur.oppervlak.woonhuizen;
-
-    // Do calculations for every profile
-    for (let i = 0; i < data.length; i++) {
-        let entry = data[i];
-        let values = createYearData(entry.data[entry.data.length - 1].year + 1, entry.data[entry.data.length - 1].savings, entry.data[entry.data.length - 1].pension);
-        
-        // the average price of a house is 365.000 :https://www.nvm.nl/nieuws/2021/cijfers-vierde-kwartaal/#:~:text=14%20januari%202021-,De%20verkoopprijs%20van%20de%20gemiddelde%20verkochte%20woning%20in%20het%20bestaande,een%20jaar%20boven%20de%2011%25.
-        // with the average surface area being dataUitgaven.uitgaven.woninghuur.oppervlak.woonhuizen (=113,40 m2),
-        // the average price per m2 would be 365.000 / 113,40 = 3.218,69...
-        // we are using this price calculation for determining how much a house will cost, plus a small factor of randomness.
-        
-        
-        let cost = 365000;
-        // changes to the profile
-        switch (entry.profile) {
-            case "house":
-                if (values.savings >= cost / 10 && entry.bezittingen.houses.length === 0) {
-                    let relief = cost / 30
-                    buyHouse(entry, values, house.TUSSENWONING, cost, 113.40, 10, relief)
-                    entry.bezittingen.houses.forEach(h => {
-                        h.living = false;
-                    })
-                    entry.bezittingen.houses[entry.bezittingen.houses.length -1].living = true;
-                }
-                break;
-            case "house2":
-                if (values.savings >= cost / 20 && entry.bezittingen.houses.length === 0) {
-                    let relief = cost / 30
-                    buyHouse(entry, values, house.TUSSENWONING, cost, 113.40, 20, relief)
-                    entry.bezittingen.houses.forEach(h => {
-                        h.living = false;
-                    })
-                    entry.bezittingen.houses[entry.bezittingen.houses.length -1].living = true;
-                }
-                break;
-            case "belegger":
-                let inleg = values.savings * 0.10;
-                inleg = values.savings - inleg < 5000 ? values.savings - 5000 : inleg;
-                inleg = inleg < 0 ? 0 : inleg;
-                entry.beleg(true, inleg, belegging.AANDEEL);
-                values.savings -= inleg;
-                break;
-            default:
-                break;
+    else {
+        if (changeTickInterval) {
+            clearInterval(tickInterval);
+            tickInterval = setInterval(tick, speed);
+            changeTickInterval = false;
         }
 
+        const costPerM2 = 365000 / +dataUitgaven.woninghuur.oppervlak.woonhuizen;
 
-        // Calculate income and expenses
-        // inkomsten en uitgaven van woningen
-        entry.bezittingen.houses.forEach(h => {
-            if (h.living) {
-                if (h.rental) {
-                    values.uitgaven.huiskosten.huur = calcHuur(h) * 4
-                    values.uitgaven.huiskosten.total += values.uitgaven.huiskosten.huur;
-                }
-                else {
-                    values.uitgaven.huiskosten.gas = calcGaskosten(h) * 12;
-                    values.uitgaven.huiskosten.water = calcWaterkosten(entry.people) * 12;
-                    values.uitgaven.huiskosten.elektriciteit = calcElektriciteitskosten(entry.people) * 12;
-                    values.uitgaven.huiskosten.total += values.uitgaven.huiskosten.gas;
-                }
+        // Do calculations for every profile
+        for (let i = 0; i < data.length; i++) {
+            let entry = data[i];
+            let values = createYearData(entry.data[entry.data.length - 1].year + 1, entry.data[entry.data.length - 1].savings, entry.data[entry.data.length - 1].pension);
+            
+            // the average price of a house is 365.000 :https://www.nvm.nl/nieuws/2021/cijfers-vierde-kwartaal/#:~:text=14%20januari%202021-,De%20verkoopprijs%20van%20de%20gemiddelde%20verkochte%20woning%20in%20het%20bestaande,een%20jaar%20boven%20de%2011%25.
+            // with the average surface area being dataUitgaven.uitgaven.woninghuur.oppervlak.woonhuizen (=113,40 m2),
+            // the average price per m2 would be 365.000 / 113,40 = 3.218,69...
+            // we are using this price calculation for determining how much a house will cost, plus a small factor of randomness.
+            
+            
+            let cost = 365000;
+            // changes to the profile
+            switch (entry.profile) {
+                case "house":
+                    if (values.savings >= cost / 10 && entry.bezittingen.houses.length === 0) {
+                        let relief = cost / 30
+                        buyHouse(entry, values, house.TUSSENWONING, cost, 113.40, 10, relief)
+                        entry.bezittingen.houses.forEach(h => {
+                            h.living = false;
+                        })
+                        entry.bezittingen.houses[entry.bezittingen.houses.length -1].living = true;
+                    }
+                    break;
+                case "house2":
+                    if (values.savings >= cost / 20 && entry.bezittingen.houses.length === 0) {
+                        let relief = cost / 30
+                        buyHouse(entry, values, house.TUSSENWONING, cost, 113.40, 20, relief)
+                        entry.bezittingen.houses.forEach(h => {
+                            h.living = false;
+                        })
+                        entry.bezittingen.houses[entry.bezittingen.houses.length -1].living = true;
+                    }
+                    break;
+                case "belegger":
+                    let inleg = values.savings * 0.10;
+                    inleg = values.savings - inleg < 5000 ? values.savings - 5000 : inleg;
+                    inleg = inleg < 0 ? 0 : inleg;
+                    entry.beleg(true, inleg, belegging.AANDEEL);
+                    values.savings -= inleg;
+                    break;
+                default:
+                    break;
             }
-            else if (h.rental) {
-                values.inkomsten.huisverhuur += calcHuur(h) * 4
-            }
-        });
-        // omdat deze persoonsgebonden zijn maar één keer tellen en dus niet in de loop toevoegen
-        values.uitgaven.huiskosten.total += values.uitgaven.huiskosten.water + values.uitgaven.huiskosten.elektriciteit;        
 
 
-        // rendement op aandelen uitkeren
-        calcInvestmentInterest(entry.beleggingen)
+            // Calculate income and expenses
+            // inkomsten en uitgaven van woningen
+            entry.bezittingen.houses.forEach(h => {
+                if (h.living) {
+                    if (h.rental) {
+                        values.uitgaven.huiskosten.huur = calcHuur(h) * 4
+                        values.uitgaven.huiskosten.total += values.uitgaven.huiskosten.huur;
+                    }
+                    else {
+                        values.uitgaven.huiskosten.gas = calcGaskosten(h) * 12;
+                        values.uitgaven.huiskosten.water = calcWaterkosten(entry.people) * 12;
+                        values.uitgaven.huiskosten.elektriciteit = calcElektriciteitskosten(entry.people) * 12;
+                        values.uitgaven.huiskosten.total += values.uitgaven.huiskosten.gas;
+                    }
+                }
+                else if (h.rental) {
+                    values.inkomsten.huisverhuur += calcHuur(h) * 4
+                }
+            });
+            // omdat deze persoonsgebonden zijn maar één keer tellen en dus niet in de loop toevoegen
+            values.uitgaven.huiskosten.total += values.uitgaven.huiskosten.water + values.uitgaven.huiskosten.elektriciteit;        
 
 
-        // inkomsten berekenen
-        values.inkomsten.salaries = calcSalaries(entry.people) * 12;
-        // geld opzij gezet voor pension van salaris. Meestal wordt rond de 20% opzij gezet van het salaris. https://www.rabobank.nl/particulieren/pension/vuistregels-pension
-        let pension = values.inkomsten.salaries * 0.2;
-        values.pension += pension;
-        values.inkomsten.kinderbijslag = calcKinderbijslag(entry.people) * 4;
-        // total
-        values.inkomsten.total += values.inkomsten.salaries + values.inkomsten.huisverhuur + values.inkomsten.kinderbijslag - pension;
+            // rendement op aandelen uitkeren
+            calcInvestmentInterest(entry.beleggingen)
 
+
+            // inkomsten berekenen
+            values.inkomsten.salaries = calcSalaries(entry.people) * 12;
+            // geld opzij gezet voor pension van salaris. Meestal wordt rond de 20% opzij gezet van het salaris. https://www.rabobank.nl/particulieren/pension/vuistregels-pension
+            let pension = values.inkomsten.salaries * 0.2;
+            values.pension += pension;
+            values.inkomsten.kinderbijslag = calcKinderbijslag(entry.people) * 4;
+            // total
+            values.inkomsten.total += values.inkomsten.salaries + values.inkomsten.huisverhuur + values.inkomsten.kinderbijslag - pension;
+
+            
+
+            // uitgaven berekenen
+            calcDebts(values, entry.debts);
+            // verzekeringen
+            values.uitgaven.verzekeringen.zorgverzekering = calcZorgverzekering(entry.verzekeringen.zorgverzekering, entry.people) * 12;
+            values.uitgaven.verzekeringen.overige = entry.verzekeringen.overige * 12
+            values.uitgaven.verzekeringen.total += values.uitgaven.verzekeringen.zorgverzekering + values.uitgaven.verzekeringen.overige;
+            // belastingen
+            values.uitgaven.belastingen.inkomensbelasting = calcInkomstenbelasting(values.inkomsten);
+            values.uitgaven.belastingen.vermogensbelasting = calcVermogensbelasting(values.savings, entry.bezittingen, entry.married);
+            values.uitgaven.belastingen.total += values.uitgaven.belastingen.inkomensbelasting + values.uitgaven.belastingen.vermogensbelasting;
+            // overige uitgaven
+            values.uitgaven.overige.voeding = calcVoedingskosten(entry.people); //uitgaven aan voeding over een jaar
+            values.uitgaven.overige.media = dataUitgaven.media.kosten * 12; //uitgaven aan media zoals: tv, internet, telefoon
+            values.uitgaven.overige.autos = calcAutokosten(entry.bezittingen.cars); //uitgaven aan auto gerelateerde zaken
+            values.uitgaven.overige.kleding = values.inkomsten.total * dataUitgaven.kleding.percentage * 0.01 //percentage van inkomen wat besteed wordt aan kleding in een gezin
+            values.uitgaven.overige.reservering = values.inkomsten.total * dataUitgaven.reserveringsuitgaven.percentage * 0.01 //reserveringsuitgaven exclusief kleding
+            values.uitgaven.overige.total += values.uitgaven.overige.voeding + values.uitgaven.overige.kleding + values.uitgaven.overige.media + values.uitgaven.overige.reservering + values.uitgaven.overige.autos;
+            // total
+            values.uitgaven.total += values.uitgaven.verzekeringen.total + values.uitgaven.belastingen.total + values.uitgaven.huiskosten.total + values.uitgaven.overige.total + values.uitgaven.debts.total;
+            // expenses to recreation
+            values.uitgaven.overige.recreation = calcRecreatieUitgaven(values.inkomsten.total, values.uitgaven.total, entry.recreation);
+            values.uitgaven.total += values.uitgaven.overige.recreation;
+
+
+            // vermogen in bezittingen berekenen
+            values.vermogen.cars = calcAutoVermogen(entry.bezittingen.cars);
+            values.vermogen.houses = calcHuisVermogen(entry.bezittingen.houses);
+            values.vermogen.beleggingen = calcInvestmentCapital(entry.beleggingen);
+            values.vermogen.total = values.vermogen.total + values.vermogen.cars + values.vermogen.houses + values.vermogen.beleggingen - values.vermogen.debts;
+
+
+
+            // inkomsten en uitgaven optellen
+            values.savings += values.inkomsten.total - values.uitgaven.total
+            // spaarrente berkenen
+            values.inkomsten.spaarrente = calcSpaarrente(values.savings)
+            values.inkomsten.total += values.inkomsten.spaarrente;
+            values.savings += values.inkomsten.spaarrente;
+            // totaal berekenen
+            values.total = values.savings + values.pension + values.vermogen.total;
+
+            entry.data.push(values)
+            yMax = values.total > yMax ? values.total : yMax;
+            yMin = values.total < yMin ? values.total : yMin;
+        }
+
+        console.log(data)
+
+        xAxis.transition()
+            .duration(speed)
+            .ease(d3.easeLinear)
+            .call(d3.axisBottom(xScale.domain([startLeeftijd, data[0].data.length + startLeeftijd - 1])));
+
+        yAxis.transition()
+            .duration(speed)
+            .ease(d3.easeLinear)
+            .call(d3.axisLeft(yScale.domain([yMax, yMin])));
+
+
+        let lines = pathContainer.selectAll("g").data(data);
+
+        // update
+        lines.select("path").transition()
+            .duration(speed)
+            .ease(d3.easeLinear)
+            .attrTween("d", function (d) {
+                return pathTween(lineValues(d.data), 1, this)()
+            });
+        lines.select("text").transition()
+            .duration(speed)
+            .ease(d3.easeLinear)
+            .attr("x", (d) => {return xScale(d.data[d.data.length - 1].year) + 5; })
+            .attr("y", (d) => {return yScale(d.data[d.data.length - 1].total) + 5; })
         
+        // enter
+        let enter = lines.enter()
+            .append("g")
+            .attr("id", (d) => { return `${d.profile}` })
+        enter.append("path")
+            .classed("line", true)
+            .attr("d", `M${xScale(0)},${yScale(0)} L${xScale(0)},${yScale(0)}`)
+            .style("stroke", (d, i) => { return colors[i]; })
+            .on("click", selectLine)
+            .transition()
+            .duration(speed)
+            .ease(d3.easeLinear)
+            .attrTween("d", function (d) {
+                return pathTween(lineValues(d.data), 1, this)()
+            });
+        enter.append("text")
+            .classed("label", true)
+            .html((d) => {return `${d.profile}`; })
+            .style("fill", (d, i) => { return colors[i]; })
+            .transition()
+            .duration(speed)
+            .ease(d3.easeLinear)
+            .attr("x", (d) => {return xScale(d.data[d.data.length - 1].year) + 10; })
+            .attr("y", (d) => {return yScale(d.data[d.data.length - 1].total); })
+        
+        // exit
+        let exit = lines.exit().remove();
 
-        // uitgaven berekenen
-        calcDebts(values, entry.debts);
-        // verzekeringen
-        values.uitgaven.verzekeringen.zorgverzekering = calcZorgverzekering(entry.verzekeringen.zorgverzekering, entry.people) * 12;
-        values.uitgaven.verzekeringen.overige = entry.verzekeringen.overige * 12
-        values.uitgaven.verzekeringen.total += values.uitgaven.verzekeringen.zorgverzekering + values.uitgaven.verzekeringen.overige;
-        // belastingen
-        values.uitgaven.belastingen.inkomensbelasting = calcInkomstenbelasting(values.inkomsten);
-        values.uitgaven.belastingen.vermogensbelasting = calcVermogensbelasting(values.savings, entry.bezittingen, entry.married);
-        values.uitgaven.belastingen.total += values.uitgaven.belastingen.inkomensbelasting + values.uitgaven.belastingen.vermogensbelasting;
-        // overige uitgaven
-        values.uitgaven.overige.voeding = calcVoedingskosten(entry.people); //uitgaven aan voeding over een jaar
-        values.uitgaven.overige.media = dataUitgaven.media.kosten * 12; //uitgaven aan media zoals: tv, internet, telefoon
-        values.uitgaven.overige.autos = calcAutokosten(entry.bezittingen.cars); //uitgaven aan auto gerelateerde zaken
-        values.uitgaven.overige.kleding = values.inkomsten.total * dataUitgaven.kleding.percentage * 0.01 //percentage van inkomen wat besteed wordt aan kleding in een gezin
-        values.uitgaven.overige.reservering = values.inkomsten.total * dataUitgaven.reserveringsuitgaven.percentage * 0.01 //reserveringsuitgaven exclusief kleding
-        values.uitgaven.overige.total += values.uitgaven.overige.voeding + values.uitgaven.overige.kleding + values.uitgaven.overige.media + values.uitgaven.overige.reservering + values.uitgaven.overige.autos;
-        // total
-        values.uitgaven.total += values.uitgaven.verzekeringen.total + values.uitgaven.belastingen.total + values.uitgaven.huiskosten.total + values.uitgaven.overige.total + values.uitgaven.debts.total;
-        // expenses to recreation
-        values.uitgaven.overige.recreation = calcRecreatieUitgaven(values.inkomsten.total, values.uitgaven.total, entry.recreation);
-        values.uitgaven.total += values.uitgaven.overige.recreation;
-
-
-        // vermogen in bezittingen berekenen
-        values.vermogen.cars = calcAutoVermogen(entry.bezittingen.cars);
-        values.vermogen.houses = calcHuisVermogen(entry.bezittingen.houses);
-        values.vermogen.beleggingen = calcInvestmentCapital(entry.beleggingen);
-        values.vermogen.total = values.vermogen.total + values.vermogen.cars + values.vermogen.houses + values.vermogen.beleggingen - values.vermogen.debts;
-
-
-
-        // inkomsten en uitgaven optellen
-        values.savings += values.inkomsten.total - values.uitgaven.total
-        // spaarrente berkenen
-        values.inkomsten.spaarrente = calcSpaarrente(values.savings)
-        values.inkomsten.total += values.inkomsten.spaarrente;
-        values.savings += values.inkomsten.spaarrente;
-        // totaal berekenen
-        values.total = values.savings + values.pension + values.vermogen.total;
-
-        entry.data.push(values)
-        yMax = values.total > yMax ? values.total : yMax;
-        yMin = values.total < yMin ? values.total : yMin;
-    }
-
-    console.log(data)
-
-    xAxis.transition()
-        .duration(speed)
-        .ease(d3.easeLinear)
-        .call(d3.axisBottom(xScale.domain([startLeeftijd, data[0].data.length + startLeeftijd - 1])));
-
-    yAxis.transition()
-        .duration(speed)
-        .ease(d3.easeLinear)
-        .call(d3.axisLeft(yScale.domain([yMax, yMin])));
-
-
-    let lines = pathContainer.selectAll("g").data(data);
-
-    // update
-    lines.select("path").transition()
-        .duration(speed)
-        .ease(d3.easeLinear)
-        .attrTween("d", function (d) {
-            return pathTween(lineValues(d.data), 1, this)()
-        });
-    lines.select("text").transition()
-        .duration(speed)
-        .ease(d3.easeLinear)
-        .attr("x", (d) => {return xScale(d.data[d.data.length - 1].year) + 5; })
-        .attr("y", (d) => {return yScale(d.data[d.data.length - 1].total) + 5; })
-    
-    // enter
-    let enter = lines.enter()
-        .append("g")
-        .attr("id", (d) => { return `${d.profile}` })
-    enter.append("path")
-        .classed("line", true)
-        .attr("d", `M${xScale(0)},${yScale(0)} L${xScale(0)},${yScale(0)}`)
-        .style("stroke", (d, i) => { return colors[i]; })
-        .on("click", selectLine)
-        .transition()
-        .duration(speed)
-        .ease(d3.easeLinear)
-        .attrTween("d", function (d) {
-            return pathTween(lineValues(d.data), 1, this)()
-        });
-    enter.append("text")
-        .classed("label", true)
-        .html((d) => {return `${d.profile}`; })
-        .style("fill", (d, i) => { return colors[i]; })
-        .transition()
-        .duration(speed)
-        .ease(d3.easeLinear)
-        .attr("x", (d) => {return xScale(d.data[d.data.length - 1].year) + 10; })
-        .attr("y", (d) => {return yScale(d.data[d.data.length - 1].total); })
-    
-    // exit
-    let exit = lines.exit().remove();
-
-    if  (selected != null) {
-        //TODO: reselect selection on restart!
-        updateCards();        
+        if  (selected != null) {
+            //TODO: reselect selection on restart!
+            updateCards();        
+        }
     }
 }
 
@@ -427,7 +492,6 @@ function getLinearScale(minData, maxData, minRange, maxRange) {
 
 // sets the selected profile
 function selectLine(e, d) {
-    console.log("click! ", e, d, this);
     d3.select(".selected")
         .classed("selected", false)
         .style("stroke-width", null);
@@ -444,11 +508,11 @@ function selectLine(e, d) {
 
 //sets all the fractioned data cards
 function updateCards() {
-    let sizeScale = getLinearScale(0, 250, 0, 500)
-
+    const sizeScale = getLinearScale(0, 100, 0.1, 5.2);
+    
     let d = selected.data[selected.data.length-1];
     const pr = (value) => {
-        return Math.round(value / d.total * 1000) / 10;
+        return Math.round(value / (d.total + d.vermogen.debts) * 1000) / 10;
     }
     const ab = (value) => {
         // return Math.round(value * 100) / 100;
@@ -457,30 +521,80 @@ function updateCards() {
 
     let sp = d3.select("#spaargeld")
     sp.select(".percent").html(`${pr(d.savings)} %`)
-    sp.select("svg").select("use").attr("transform", `scale(${sizeScale(pr(d.savings))})`)
+    sp.select("svg").select("use")
+        .transition().duration(speed)
+        .attr("transform", () => {return getTransform(piggyBank, sizeScale(pr(d.savings)))})
     sp.select(".absolute").html(`€ ${ab(d.savings)}`)
 
     let p = d3.select("#pensioen")
     p.select(".percent").html(`${pr(d.pension)} %`)
+    p.select("svg").select("use")
+        .transition().duration(speed)
+        .attr("transform", () => {return getTransform(piggyBank, sizeScale(pr(d.pension)))})
     p.select(".absolute").html(`€ ${ab(d.pension)}`)
 
     let b = d3.select("#belegging")
     b.select(".percent").html(`${pr(d.vermogen.beleggingen)} %`)
+    b.select("svg").select("use")
+        .transition().duration(speed)
+        .attr("transform", () => {return getTransform(piggyBank, sizeScale(pr(d.vermogen.beleggingen)))})
     b.select(".absolute").html(`€ ${ab(d.vermogen.beleggingen)}`)
 
     let v = d3.select("#vastgoed")
     v.select(".percent").html(`${pr(d.vermogen.total + d.vermogen.debts - d.vermogen.beleggingen)} %`)
+    v.select("svg").select("use")
+        .transition().duration(speed)
+        .attr("transform", () => {return getTransform(piggyBank, sizeScale(pr(d.vermogen.total + d.vermogen.debts - d.vermogen.beleggingen)))})
     v.select(".absolute").html(`€ ${ab(d.vermogen.total + d.vermogen.debts - d.vermogen.beleggingen)}`)
 
     let sc = d3.select("#schulden")
-    sc.select(".percent").html(`${pr(d.vermogen.debts)} %`)
+    sc.select(".percent").html(`${-pr(d.vermogen.debts)} %`)
+    sc.select("svg").select("use")
+        .transition().duration(speed)
+        .attr("transform", () => {return getTransform(piggyBank, sizeScale(pr(d.vermogen.debts)))})    
     sc.select(".absolute").html(`€ ${-ab(d.vermogen.debts)}`)
 
     // gemiddelde inflatie per jaar is, sinds 1997 gemiddeld 1,92%: https://www.berekenhet.nl/modules/beleggen/inflatie.html#:~:text=De%20(gemiddelde)%20inflatie%20per%20jaar,1%2C92%25%20per%20jaar.
     let inflatie = Math.pow(1.0192, selected.data.length);
     let i = d3.select("#inflatie")
     i.select(".percent").html(`${Math.round(inflatie * 1000)/10} %`)
+    i.select("svg").select("use")
+        .transition().duration(speed)
+        .attr("transform", () => {return getTransform(piggyBank, sizeScale((d.total / (d.total * inflatie)) * 100))})
     i.select(".absolute").html(`€ ${Math.round(d.total / inflatie * 100)}`)
+}
+
+
+// Calculates how to transform a svg inside a svg
+function getTransform(element, scale, x = 250, y = 250) {
+    //x = new x position
+    //y = new y position
+    //scale = size of the shape
+
+    let reference = element;
+    let box = reference.node().getBBox();
+    // let centerX = box.x + box.width / 2;
+    // let centerY = box.y + box.height / 2;
+    let centerX = box.width / 2;
+    let centerY = box.height / 2;
+    let scaleAmount = scale;
+
+    //console.log(box)
+    //formula for the translate to scale the shape from its center
+    let translateX = (1 - scaleAmount) * centerX;
+    let translateY = (1 - scaleAmount) * centerY;
+
+    // to move this shape to x:100 and y:200 in the SVG:
+    let posX = x;
+    translateX += posX - box.width / 2;
+    let posY = y;
+    translateY += posY - box.height / 2;
+
+    // first scale the shape, then put it back in place. Transform is read from right to left
+    let transform = `translate(${translateX},${translateY}) scale(${scaleAmount}) `;
+
+    //console.log(transform)
+    return transform;
 }
 
 

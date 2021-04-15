@@ -5,7 +5,6 @@ body {
 
 svg {
     position: relative;
-    
     width: 100%;
     height: auto;
     z-index: 2;
@@ -107,7 +106,7 @@ img {
     padding-bottom: 75px;
     padding-left: 80px;
     padding-right: 100px;
-    background: #40916C;
+    background: #D8F3DC;
 }
 
 .profiel .arrow {
@@ -117,7 +116,7 @@ img {
     bottom: -50px;
     left: 50px;
     z-index: 1;
-    background: #40916C;
+    background: #D8F3DC;
     border-radius: 10px;
     width: 120px;
     height: 120px;
@@ -160,6 +159,12 @@ img {
     line-height: 1.5;
 }
 
+.slider-label {
+    fill: #1B4332;
+    font-family: 'Open Sans', sans-serif;
+    font-size: 12px;
+}
+
 .line { 
     fill: none;
     stroke-width: 1.5;
@@ -173,7 +178,7 @@ img {
 
 .profieltekst {
     position: relative;;
-    color: white;
+    color: #1B4332;
     font-family: 'Open Sans', sans-serif;
     font-size: 24px;
     font-weight: 400;
@@ -188,8 +193,13 @@ img {
     font-family: 'Montserrat', sans-serif;
     font-size: 50px;
     font-weight: 200;
+    text-align: center;
 }
 
 #time-chart {
     background-color: #B7E4C7;
+}
+
+path#piggy-bank {
+    fill: #081C15;
 }
