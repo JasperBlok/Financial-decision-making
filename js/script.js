@@ -157,7 +157,7 @@ function initializeGraph() {
     
     // add clipPath on the pathContainer
     pathContainer.attr("clip-path","url(#path-clip)")
-    
+
     const sliderFill = d3.sliderBottom()
         .min(d3.min(sliderData))
         .max(d3.max(sliderData))
@@ -213,15 +213,23 @@ function initializeGraph() {
 // creates the profiles and adds them to the data array
 function setProfiles() {
     data.push(
-        createProfile("Gezin", true)
+        // createProfile("Gezin", true)
+        //     .addPerson("m", true, 40, 18)
+        //     .addPerson("v", true, 30, 18)
+        //     .addPerson("m", false, 0, 2)
+        //     .addHouse(house.FLAT, 314000, 82.30, true, true)
+        //     .addCar(car.MINI_KLASSE, 8000)
+        //     .setZorgverzekering(true, 0, false)
+        //     .setOverigVerzekering(38)
+        //     .setRecreationBudget(200, 300, 17, 19),
+        createProfile("Genieter", false)
             .addPerson("m", true, 40, 18)
-            .addPerson("v", true, 30, 18)
-            .addPerson("m", false, 0, 2)
-            .addHouse(house.FLAT, 314000, 82.30, true, true)
-            .addCar(car.MINI_KLASSE, 8000)
-            .setZorgverzekering(true, 0, false)
-            .setOverigVerzekering(38)
-            .setRecreationBudget(200, 300, 17, 19),
+            .addHouse(house.TUSSENWONING, 314000, 113.40, true, true)
+            .setZorgverzekering(true, 0, true)
+            .setOverigVerzekering(0)
+            .setRecreationBudget(100, 150, 35, 40)
+            .setBelegRisico(risico.GEMIDDELD)
+            .setProfieltekst(profielteksten.belegger.h, profielteksten.belegger.tekst),
         createProfile("Belegger", false)
             .addPerson("m", true, 40, 18)
             .addHouse(house.TUSSENWONING, 314000, 113.40, true, true)
@@ -242,6 +250,14 @@ function setProfiles() {
             .setZorgverzekering(false, 500, false)
             .setOverigVerzekering(36)
             .setRecreationBudget(100, 200, 17, 19),
+        createProfile("Late belegger", false)
+            .addPerson("m", true, 40, 18)
+            .addHouse(house.TUSSENWONING, 314000, 113.40, true, true)
+            .setZorgverzekering(true, 0, true)
+            .setOverigVerzekering(0)
+            .setRecreationBudget(100, 150, 17, 19)
+            .setBelegRisico(risico.GEMIDDELD)
+            .setProfieltekst(profielteksten.belegger.h, profielteksten.belegger.tekst)
     );
 }
 
@@ -289,19 +305,21 @@ function restart() {
 
 function tick() {
     if (data[0].data.length > 50) {
+        //if the vis has ended, zoom out the graph
         xAxis.transition()
-            .duration(speed * 3)
+            .duration(speed * 4)
             .call(d3.axisBottom(xScale.domain([startLeeftijd,  data[0].data.length + startLeeftijd - 1])));
         
         let lines = pathContainer.selectAll("g").data(data);
 
         // update
         lines.select("path").transition()
-            .duration(speed * 3)
+            .duration(speed * 4)
             .attrTween("d", function (d) {
                 return pathTween(lineValues(d.data), 1, this)()
             });
-
+        
+        // Stop the ticks and make the button reset the graphs
         clearInterval(tickInterval);
         tickInterval = null;
         startBtn.on("click", restart)
@@ -313,8 +331,6 @@ function tick() {
             tickInterval = setInterval(tick, speed);
             changeTickInterval = false;
         }
-
-        const costPerM2 = 365000 / +dataUitgaven.woninghuur.oppervlak.woonhuizen;
 
         // Do calculations for every profile
         for (let i = 0; i < data.length; i++) {
@@ -332,23 +348,17 @@ function tick() {
             switch (entry.profile.toLowerCase()) {
                 case "huiseigenaar":
                     if (values.savings >= cost / 10 && entry.bezittingen.houses.length === 0) {
-                        let relief = cost / 30
-                        buyHouse(entry, values, house.TUSSENWONING, cost, 113.40, 10, relief)
+                        let relief = cost / 30;
+                        buyHouse(entry, values, house.TUSSENWONING, cost, 113.40, 10, relief);
                         entry.bezittingen.houses.forEach(h => {
                             h.living = false;
                         })
                         entry.bezittingen.houses[entry.bezittingen.houses.length -1].living = true;
                     }
-                    break;
-                case "spaarder":
-                    // if (values.savings >= cost / 20 && entry.bezittingen.houses.length === 0) {
-                    //     let relief = cost / 30
-                    //     buyHouse(entry, values, house.TUSSENWONING, cost, 113.40, 20, relief)
-                    //     entry.bezittingen.houses.forEach(h => {
-                    //         h.living = false;
-                    //     })
-                    //     entry.bezittingen.houses[entry.bezittingen.houses.length -1].living = true;
-                    // }
+                    else if (values.savings >= cost && entry.bezittingen.houses.length === 1) {
+                        buyHouse(entry, values, house.TUSSENWONING, cost, 113.40, 100, 0);
+                        entry.bezittingen.houses[entry.bezittingen.houses.length -1].rental = true;
+                    }
                     break;
                 case "belegger":
                     if (values.savings < 5000 + calcInvestmentCapital(entry.beleggingen) * 0.07) {
@@ -365,8 +375,26 @@ function tick() {
                         entry.beleg(true, inleg, belegging.AANDEEL);
                         values.savings -= inleg;
                     }
-                    
                     break;
+                    case "late belegger":
+                        if (values.year > 50) {
+                            if (values.savings < 5000 + calcInvestmentCapital(entry.beleggingen) * 0.07) {
+                                if (calcInvestmentCapital(entry.beleggingen) > 0) {
+                                    let sell = (5000 - values.savings) + calcInvestmentCapital(entry.beleggingen) * 0.09;
+                                    entry.beleg(false, sell, belegging.AANDEEL)
+                                    values.savings += sell;
+                                }
+                            }
+                            else {
+                                let inleg = values.savings * 0.10;
+                                inleg = values.savings - inleg < 5000 ? values.savings - 5000 : inleg;
+                                inleg = inleg < 0 ? 0 : inleg;
+                                entry.beleg(true, inleg, belegging.AANDEEL);
+                                values.savings -= inleg;
+                            }
+                        }
+                        
+                        break;
                 default:
                     break;
             }
