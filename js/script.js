@@ -5,7 +5,7 @@ const width = 500;
 const height = 300;
 const margin = {
     top: 30,
-    right: 70,
+    right: 100,
     bottom: 30,
     left: 70
 }
@@ -38,7 +38,9 @@ let speed = 500;
 const sliderData = [-2, -1, 0, 1, 2]; // afspeelsnelheid slider, vb: https://bl.ocks.org/johnwalley/e1d256b81e51da68f7feb632a53c3518
 let tickInterval = null;
 let changeTickInterval = false;
-const colors = ["#ff595e", "#ffca3a", "#8ac926", "#1982c4", "#6a4c93"];
+// const colors = ["#ff595e", "#ffca3a", "#8ac926", "#1982c4", "#6a4c93"];
+const colors = ["#47126b","#6411ad","#973aa8","#c05299","#ea698b"];
+const strokes = ["none", "50 15", "10 10", "5 10 5 10 5", "1 5"];
 let selected = null; 
 
 // Enumerators
@@ -113,34 +115,23 @@ const profielteksten = {
     dataUitgaven = dataInUit.uitgaven;
 
     calcUurlonen();
-
-    btnStart.attr("disabled", null);
-
+    
     console.log(dataJaarinkomen);
     console.log(dataUren);
     console.log(dataUurlonen);
     console.log(dataInkomsten);
     console.log(dataUitgaven);
 
-    // d3.xml("svg/piggy_bank.svg")
-    //     .then(data => {
-    //         d3.select(".fraction-container").selectAll("div").nodes().forEach(n => {
-    //             console.log(n)
-    //             d3.select(n).selectAll("div").nodes().forEach(d => {
-    //                 d.append(data.documentElement.cloneNode(true))
-    //             })
-    //         })
-    //     });
+    btnStart.attr("disabled", null);
 
-
-    // set graph attributes
     initializeGraph();
 })();
 
 
 // Initialize visualization
 function initializeGraph() {
-    svgTime.attr("viewBox", `0 0 ${width} ${height}`);
+    svgTime.attr("viewBox", `0 0 ${width} ${height}`)
+        .style("background-color", "#B7E4C7");
 
     axisContainer.attr("transform", `translate(${margin.left}, ${margin.top})`)
         .style("color", "#1B4332");
@@ -159,7 +150,7 @@ function initializeGraph() {
         .ticks(0)
         .default(0)
         .displayValue(false)
-        .fill('#1B4332')
+        .fill("#52B788")
         .handle(d3.symbol()
             .type(d3.symbolCircle)
             .size(100)())
@@ -173,7 +164,10 @@ function initializeGraph() {
     sliderContainer.append("text")
         .classed("slider-label", true)
         .html("Afspeelsnelheid:")
-        .attr('transform', 'translate(-120, 5)');
+        .attr('transform', 'translate(-120, 5)')
+        .style("fill", "#1B4332")
+        .style("font-family", "Volkorn")
+        .style("font-size", "12px");
 
     sliderContainer.call(sliderFill);
 
@@ -204,7 +198,7 @@ function initializeGraph() {
 // creates the profiles and adds them to the data array
 function setProfiles() {
     data.push(
-        createProfile("couple", true)
+        createProfile("Gezin", true)
             .addPerson("m", true, 40, 18)
             .addPerson("v", true, 30, 18)
             .addPerson("m", false, 0, 2)
@@ -213,7 +207,7 @@ function setProfiles() {
             .setZorgverzekering(true, 0, false)
             .setOverigVerzekering(38)
             .setRecreationBudget(200, 300, 17, 19),
-        createProfile("belegger", false)
+        createProfile("Belegger", false)
             .addPerson("m", true, 40, 18)
             .addHouse(house.TUSSENWONING, 314000, 113.40, true, true)
             .setZorgverzekering(true, 0, true)
@@ -221,13 +215,13 @@ function setProfiles() {
             .setRecreationBudget(100, 150, 17, 19)
             .setBelegRisico(risico.GEMIDDELD)
             .setProfieltekst(profielteksten.belegger.h, profielteksten.belegger.tekst),
-        createProfile("house", false)
+        createProfile("Huiseigenaar", false)
             .addPerson("m", true, 40, 18)
             //.addHouse(house.TUSSENWONING, 314000, 113.40, false, true)
             .setZorgverzekering(false, 500, false)
             .setOverigVerzekering(36)
             .setRecreationBudget(100, 200, 17, 19),
-        createProfile("house2", false)
+        createProfile("Spaarder", false)
             .addPerson("m", true, 40, 18)
             //.addHouse(house.TUSSENWONING, 314000, 113.40, false, true)
             .setZorgverzekering(false, 500, false)
@@ -301,8 +295,8 @@ function tick() {
             
             let cost = 365000;
             // changes to the profile
-            switch (entry.profile) {
-                case "house":
+            switch (entry.profile.toLowerCase()) {
+                case "huiseigenaar":
                     if (values.savings >= cost / 10 && entry.bezittingen.houses.length === 0) {
                         let relief = cost / 30
                         buyHouse(entry, values, house.TUSSENWONING, cost, 113.40, 10, relief)
@@ -312,22 +306,32 @@ function tick() {
                         entry.bezittingen.houses[entry.bezittingen.houses.length -1].living = true;
                     }
                     break;
-                case "house2":
-                    if (values.savings >= cost / 20 && entry.bezittingen.houses.length === 0) {
-                        let relief = cost / 30
-                        buyHouse(entry, values, house.TUSSENWONING, cost, 113.40, 20, relief)
-                        entry.bezittingen.houses.forEach(h => {
-                            h.living = false;
-                        })
-                        entry.bezittingen.houses[entry.bezittingen.houses.length -1].living = true;
-                    }
+                case "spaarder":
+                    // if (values.savings >= cost / 20 && entry.bezittingen.houses.length === 0) {
+                    //     let relief = cost / 30
+                    //     buyHouse(entry, values, house.TUSSENWONING, cost, 113.40, 20, relief)
+                    //     entry.bezittingen.houses.forEach(h => {
+                    //         h.living = false;
+                    //     })
+                    //     entry.bezittingen.houses[entry.bezittingen.houses.length -1].living = true;
+                    // }
                     break;
                 case "belegger":
-                    let inleg = values.savings * 0.10;
-                    inleg = values.savings - inleg < 5000 ? values.savings - 5000 : inleg;
-                    inleg = inleg < 0 ? 0 : inleg;
-                    entry.beleg(true, inleg, belegging.AANDEEL);
-                    values.savings -= inleg;
+                    if (values.savings < 5000) {
+                        if (calcInvestmentCapital(entry.beleggingen) > 0) {
+                            let sell = 5000 - values.savings;
+                            entry.beleg(false, sell, belegging.AANDEEL)
+                            values.savings += sell;
+                        }
+                    }
+                    else {
+                        let inleg = values.savings * 0.10;
+                        inleg = values.savings - inleg < 5000 ? values.savings - 5000 : inleg;
+                        inleg = inleg < 0 ? 0 : inleg;
+                        entry.beleg(true, inleg, belegging.AANDEEL);
+                        values.savings -= inleg;
+                    }
+                    
                     break;
                 default:
                     break;
@@ -339,22 +343,37 @@ function tick() {
             entry.bezittingen.houses.forEach(h => {
                 if (h.living) {
                     if (h.rental) {
-                        values.uitgaven.huiskosten.huur = calcHuur(h) * 4
+                        values.uitgaven.huiskosten.huur += calcHuur(h) * 4
+                        // De gemiddelde onderhoudskosten van een huis zijn 1% van de huiswaarde
+                        // bron :https://www.woonderhoud.nl/woningonderhoud/wat-kost-het-onderhoud-van-een-huis/#:~:text=De%20kosten%20van%20onderhoud%20zijn,onderhoud%20%E2%82%AC3.000%20zullen%20bedragen.
+                        // Bij een huurhuis worden het grootste deel van het onderhoud betaald door de verhuurder, maar dingen 
+                        // zoals meubulair wordt over het algemeen door de bewoner betaald. Daarom is gekozen om 1/4e van de 
+                        // normale onderhoudskosten te rekenen voor een huurder
+                        values.uitgaven.huiskosten.onderhoud += h.worth * 0.0025
                         values.uitgaven.huiskosten.total += values.uitgaven.huiskosten.huur;
+                        
                     }
                     else {
-                        values.uitgaven.huiskosten.gas = calcGaskosten(h) * 12;
-                        values.uitgaven.huiskosten.water = calcWaterkosten(entry.people) * 12;
-                        values.uitgaven.huiskosten.elektriciteit = calcElektriciteitskosten(entry.people) * 12;
-                        values.uitgaven.huiskosten.total += values.uitgaven.huiskosten.gas;
+                        values.uitgaven.huiskosten.gas += calcGaskosten(h) * 12;
+                        values.uitgaven.huiskosten.water += calcWaterkosten(entry.people) * 12;
+                        values.uitgaven.huiskosten.elektriciteit += calcElektriciteitskosten(entry.people) * 12;
+                        values.uitgaven.huiskosten.onderhoud += h.worth * 0.01;
                     }
                 }
                 else if (h.rental) {
+                    // voor kosten van water en elektriciteit de bewoners wordt uitgegaan van 2 bewoners
+                    values.uitgaven.huiskosten.gas += calcGaskosten(h) * 12;
+                    values.uitgaven.huiskosten.water += calcWaterkosten([1, 2]) * 12;
+                    values.uitgaven.huiskosten.elektriciteit += calcElektriciteitskosten([1, 2]) * 12;
+                    values.uitgaven.huiskosten.onderhoud += h.worth * 0.0075;
                     values.inkomsten.huisverhuur += calcHuur(h) * 4
                 }
+                else {
+                    values.uitgaven.huiskosten.onderhoud += h.worth * 0.01;
+                }
             });
-            // omdat deze persoonsgebonden zijn maar één keer tellen en dus niet in de loop toevoegen
-            values.uitgaven.huiskosten.total += values.uitgaven.huiskosten.water + values.uitgaven.huiskosten.elektriciteit;        
+            // voorkomen dat dezelfde waarde meerdere keren opgeteld wordt en dus niet in de loop toevoegen
+            values.uitgaven.huiskosten.total += values.uitgaven.huiskosten.water + values.uitgaven.huiskosten.elektriciteit + values.uitgaven.huiskosten.gas + values.uitgaven.huiskosten.onderhoud;        
 
 
             // rendement op aandelen uitkeren
@@ -380,7 +399,7 @@ function tick() {
             values.uitgaven.verzekeringen.total += values.uitgaven.verzekeringen.zorgverzekering + values.uitgaven.verzekeringen.overige;
             // belastingen
             values.uitgaven.belastingen.inkomensbelasting = calcInkomstenbelasting(values.inkomsten);
-            values.uitgaven.belastingen.vermogensbelasting = calcVermogensbelasting(values.savings, entry.bezittingen, entry.married);
+            values.uitgaven.belastingen.vermogensbelasting = calcVermogensbelasting(values.savings, entry.bezittingen, entry.beleggingen, entry.married);
             values.uitgaven.belastingen.total += values.uitgaven.belastingen.inkomensbelasting + values.uitgaven.belastingen.vermogensbelasting;
             // overige uitgaven
             values.uitgaven.overige.voeding = calcVoedingskosten(entry.people); //uitgaven aan voeding over een jaar
@@ -450,10 +469,22 @@ function tick() {
         let enter = lines.enter()
             .append("g")
             .attr("id", (d) => { return `${d.profile}` })
+        
         enter.append("path")
             .classed("line", true)
             .attr("d", `M${xScale(0)},${yScale(0)} L${xScale(0)},${yScale(0)}`)
             .style("stroke", (d, i) => { return colors[i]; })
+            .style("stroke-dasharray", (d, i) => { return strokes[i]; })
+            .style("stroke-width", 1.5)
+            .style("stroke-linecap", "round")
+            .style("stroke-linejoin", "round")
+            .style("fill", "none")
+            .on("mouseover", function(){d3.select(this).style("stroke-width", 3);})
+            .on("mouseout", function(){
+                if (selected === null || selected.profile != d3.select(this.parentNode).attr("id")) {
+                    d3.select(this).style("stroke-width", 1.5);
+                }
+            })
             .on("click", selectLine)
             .transition()
             .duration(speed)
@@ -461,21 +492,25 @@ function tick() {
             .attrTween("d", function (d) {
                 return pathTween(lineValues(d.data), 1, this)()
             });
+        
         enter.append("text")
             .classed("label", true)
             .html((d) => {return `${d.profile}`; })
             .style("fill", (d, i) => { return colors[i]; })
+            .style("font-family", "'Vollkorn', serif")
+            .style("font-size", 14)
+            .on("click", selectText)
             .transition()
             .duration(speed)
             .ease(d3.easeLinear)
             .attr("x", (d) => {return xScale(d.data[d.data.length - 1].year) + 10; })
             .attr("y", (d) => {return yScale(d.data[d.data.length - 1].total); })
-        
+            
+
         // exit
         let exit = lines.exit().remove();
 
         if  (selected != null) {
-            //TODO: reselect selection on restart!
             updateCards();        
         }
     }
@@ -487,6 +522,21 @@ function getLinearScale(minData, maxData, minRange, maxRange) {
         .domain([minData, maxData])
         .range([minRange, maxRange]);
     return scale;
+}
+
+// sets the selected profile from the clicked text
+function selectText(e, d) {
+    d3.select(".selected")
+        .classed("selected", false)
+        .style("stroke-width", null);
+    d3.select(this.parentNode).select("path")
+        .classed("selected", true)
+        .style("stroke-width", 3);
+    
+    d3.select(".profielnaam").html(d.profieltekst.h);
+    d3.select(".profieltekst").html(d.profieltekst.p);
+    selected = d;
+    updateCards();
 }
 
 
@@ -561,7 +611,7 @@ function updateCards() {
     i.select("svg").select("use")
         .transition().duration(speed)
         .attr("transform", () => {return getTransform(piggyBank, sizeScale((d.total / (d.total * inflatie)) * 100))})
-    i.select(".absolute").html(`€ ${Math.round(d.total / inflatie * 100)}`)
+    i.select(".absolute").html(`€ ${Math.round(d.total / inflatie)}`)
 }
 
 
@@ -738,6 +788,11 @@ function createProfile(name, married) {
             });
             return this;
         },
+        sellCar: function (index) {
+            let worth = this.bezittingen.cars[i].worth;
+            this.bezittingen.cars.splice(i, 1);
+            return worth;
+        },
         addDebt: function (type, amount, interest, relief) {
             this.debts.push({
                 type: type,
@@ -808,7 +863,9 @@ function createYearData(year, savings, pension) {
                 total: 0,
                 gas: 0,
                 water: 0,
-                elektriciteit: 0
+                elektriciteit: 0,
+                onderhoud: 0,
+                huur: 0
             },
             verzekeringen: {
                 total: 0
@@ -967,6 +1024,7 @@ function calcHuur(huis) {
 }
 
 
+// returns annual car costs
 function calcAutokosten(cars) {
     let tot = 0;
     let dataAuto = dataUitgaven.auto;
@@ -1047,9 +1105,11 @@ function calcInkomstenbelasting(inkomsten) {
 
 
 // returns total to be paid to vermogensbelasing
-function calcVermogensbelasting(spaargeld, bezittingen, married) {
+function calcVermogensbelasting(spaargeld, bezittingen, beleggingen, married) {
     let vermogen = spaargeld;
-    // TODO: bezittingen meerekenen & 2e huis meerekenen.
+    vermogen += calcHuisVermogen(bezittingen.houses, false);
+    vermogen += calcInvestmentCapital(beleggingen);
+    vermogen += calcBezittingVermogen(bezittingen.other);
     let tot = 0;
 
     let schijven = dataUitgaven.belastingen.vermogensbelasting.schijven;
@@ -1089,12 +1149,24 @@ function calcAutoVermogen(cars) {
 function calcHuisVermogen(houses, includeLiving = true) {
     let tot = 0;
     houses.forEach(h => {
-        // de prijsstijging van huizen is historisch gezien, gemiddeld genomen 4,85%: https://www.wegwijs.nl/verdieping/longreads/1-februari-huizenmarkt/
-        let f = 1 + getNum(300, 670) * 0.0001;
-        h.worth = h.worth * f;
+        if(includeLiving) {
+            // de prijsstijging van huizen is historisch gezien, gemiddeld genomen 4,85%: https://www.wegwijs.nl/verdieping/longreads/1-februari-huizenmarkt/
+            let f = 1 + getNum(300, 670) * 0.0001;
+            h.worth = h.worth * f;
+        }
         if (!h.living || (h.living && includeLiving && !h.rental)) {
             tot += h.worth;
         }
+    });
+    return tot;
+}
+
+
+// returns total worth of other items owned by the person
+function calcBezittingVermogen(items) {
+    let tot = 0;
+    items.forEach(i => {
+        tot += i.worth;
     });
     return tot;
 }

@@ -13,9 +13,9 @@ svg {
 h1 {
     margin-left: 200px;
     padding-bottom: 180;
-    color: white;
+    color: #081C15;
     font-family: 'Vollkorn', serif;
-    font-size: 120px;
+    font-size: 100px;
     font-weight: bold;
     line-height: 1.5;
 }
@@ -23,16 +23,28 @@ h1 {
 h2, h3 {
     position: relative;
     z-index: 2;
-    padding-bottom: 25px;
-    color: white;
-    font-family: 'Open Sans', sans-serif;
-    font-size: 50px;
-    font-weight: 600;
+    color: #081C15;
     line-height: 1.5;
+}
+
+h2 {
+    font-family: 'Vollkorn', serif;
+    font-size: 50px;
+    padding-bottom: 25px;
+    font-weight: 600;
 }
 
 h3 {
     text-align: center;
+    font-family: 'Open Sans', sans-serif;
+    font-size: 40px;
+    padding-bottom: 20px;
+    font-weight: 400;
+}
+
+p {
+    color: #081C15;
+    line-height: 1.5;
 }
 
 img {
@@ -54,6 +66,12 @@ img {
     padding-bottom: 75px;
     z-index: 2;
     grid-template-columns: 2fr 1fr;
+}
+
+.intro {
+    font-family: 'Open Sans', sans-serif;
+    font-size: 28px;
+    font-weight: normal;
 }
 
 .intro-container .arrow {
@@ -109,6 +127,15 @@ img {
     background: #D8F3DC;
 }
 
+.profieltekst {
+    position: relative;
+    color: #1B4332;
+    font-family: 'Open Sans', sans-serif;
+    font-size: 24px;
+    font-weight: 400;
+    z-index: 2;
+}
+
 .profiel .arrow {
     position: absolute;
     transform-origin: center;
@@ -127,77 +154,34 @@ img {
     padding-bottom: 75px;
     padding-right: 200px;
     padding-left: 200px;
-    background: #52B788;
 }
 
 .fraction {
     position: relative;
     padding: 70px 20px 50px 20px;
-    background: #40916C;
+    border-radius: 25px;
+    background: #B7E4C7;
     display: grid;
     grid-auto-flow: row;
     grid-template-rows: 150px 75px 1fr 75px;
 }
 
-/* .fraction .arrow {
-    position: absolute;
-    transform-origin: center;
-    transform: rotate(45deg);
-    top: -70px;
-    left: 50px;
-    z-index: 1;
-    background: #52B788;
-    border-radius: 10px;
-    width: 120px;
-    height: 120px;
-} */
-
-.intro {
-    color: white;
-    font-size: 40px;
-    font-weight: normal;
-    line-height: 1.5;
-}
-
-.slider-label {
-    fill: #1B4332;
-    font-family: 'Open Sans', sans-serif;
-    font-size: 12px;
-}
-
-.line { 
-    fill: none;
-    stroke-width: 1.5;
-    stroke-linecap: round;
-    stroke-linejoin: round;
-}
-
-.line:hover {
-    stroke-width: 3;
-}
-
-.profieltekst {
-    position: relative;;
-    color: #1B4332;
-    font-family: 'Open Sans', sans-serif;
-    font-size: 24px;
-    font-weight: 400;
-    line-height: 1.5;
-    z-index: 2;
-}
-
 .bedrag {
     position: relative;
     z-index: 1;
-    color: #D8F3DC;
     font-family: 'Montserrat', sans-serif;
     font-size: 50px;
     font-weight: 200;
     text-align: center;
 }
 
-#time-chart {
-    background-color: #B7E4C7;
+.slider .track, .slider .parameter-value path {
+    stroke: #40916C;
+    fill: #52B788;
+}
+
+.slider .track-inset {
+    fill: #D8F3DC;
 }
 
 path#piggy-bank {
