@@ -12,8 +12,8 @@ const margin = {
 
 // Element references
 const svgTime = d3.select("#time_chart");
-const btnStart = d3.select("button");
 const piggyBank = d3.select("path#piggy-bank");
+const startBtn = d3.select("#btnStart");
 
 // create Time graph elements
 const axisContainer = svgTime.append("g").attr("id", "axisContainer");
@@ -122,16 +122,19 @@ const profielteksten = {
     console.log(dataInkomsten);
     console.log(dataUitgaven);
 
-    btnStart.attr("disabled", null);
-
     initializeGraph();
+
+    startBtn.on("click", startVis)
+        .classed("disabled", false);
 })();
 
 
 // Initialize visualization
 function initializeGraph() {
     svgTime.attr("viewBox", `0 0 ${width} ${height}`)
-        .style("background-color", "#B7E4C7");
+        .style("background-color", "#B7E4C7")
+    
+    
 
     axisContainer.attr("transform", `translate(${margin.left}, ${margin.top})`)
         .style("color", "#1B4332");
@@ -143,6 +146,18 @@ function initializeGraph() {
     yAxis.call(d3.axisLeft(yScale))
         .style("font-family", "'Open Sans', sans-serif");
 
+    // define clipPath for all the lines in the graph
+    svgTime.append("clipPath")
+        .attr("id", "path-clip")
+        .append("rect")
+        .attr("x", 0)
+        .attr("y", -20)
+        .attr("width", width - margin.left)
+        .attr("height", height + 20 - margin.bottom);
+    
+    // add clipPath on the pathContainer
+    pathContainer.attr("clip-path","url(#path-clip)")
+    
     const sliderFill = d3.sliderBottom()
         .min(d3.min(sliderData))
         .max(d3.max(sliderData))
@@ -236,10 +251,12 @@ function startVis() {
     if (tickInterval != null) {
         clearInterval(tickInterval);
         tickInterval = null;
+        startBtn.html("Hervatten")
     }
     else {
         tickInterval = setInterval(tick, speed);
         tick();
+        startBtn.html("Pauzeren")
     }
 }
 
@@ -262,6 +279,8 @@ function restart() {
     else {
         setProfiles();
     }
+
+    startBtn.on("click", startVis)
     
     // start visualization
     startVis()
@@ -270,8 +289,23 @@ function restart() {
 
 function tick() {
     if (data[0].data.length > 50) {
+        xAxis.transition()
+            .duration(speed * 3)
+            .call(d3.axisBottom(xScale.domain([startLeeftijd,  data[0].data.length + startLeeftijd - 1])));
+        
+        let lines = pathContainer.selectAll("g").data(data);
+
+        // update
+        lines.select("path").transition()
+            .duration(speed * 3)
+            .attrTween("d", function (d) {
+                return pathTween(lineValues(d.data), 1, this)()
+            });
+
         clearInterval(tickInterval);
         tickInterval = null;
+        startBtn.on("click", restart)
+            .html("Opnieuw afspelen")
     }
     else {
         if (changeTickInterval) {
@@ -317,9 +351,9 @@ function tick() {
                     // }
                     break;
                 case "belegger":
-                    if (values.savings < 5000) {
+                    if (values.savings < 5000 + calcInvestmentCapital(entry.beleggingen) * 0.07) {
                         if (calcInvestmentCapital(entry.beleggingen) > 0) {
-                            let sell = 5000 - values.savings;
+                            let sell = (5000 - values.savings) + calcInvestmentCapital(entry.beleggingen) * 0.09;
                             entry.beleg(false, sell, belegging.AANDEEL)
                             values.savings += sell;
                         }
@@ -438,11 +472,15 @@ function tick() {
         }
 
         console.log(data)
+        const datapoints = 10;
+        let xMax = data[0].data.length + startLeeftijd - 1;
+        let xMin = startLeeftijd < xMax - datapoints ? xMax - datapoints : startLeeftijd;
+        
 
         xAxis.transition()
             .duration(speed)
             .ease(d3.easeLinear)
-            .call(d3.axisBottom(xScale.domain([startLeeftijd, data[0].data.length + startLeeftijd - 1])));
+            .call(d3.axisBottom(xScale.domain([xMin, xMax])));
 
         yAxis.transition()
             .duration(speed)
@@ -479,6 +517,7 @@ function tick() {
             .style("stroke-linecap", "round")
             .style("stroke-linejoin", "round")
             .style("fill", "none")
+            
             .on("mouseover", function(){d3.select(this).style("stroke-width", 3);})
             .on("mouseout", function(){
                 if (selected === null || selected.profile != d3.select(this.parentNode).attr("id")) {
