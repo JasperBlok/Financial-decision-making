@@ -48,7 +48,7 @@
         <div class="graph">
             <svg id="time_chart"></svg>
             <a id="btnStart" class="btn disabled" role="button">Start</a>
-            <button onclick="tick()">tick</button>
+            <!-- <button onclick="tick()">tick</button> -->
             <div class="arrow"></div>
         </div>
         <div class="profiel">
@@ -56,12 +56,14 @@
             <p class="profieltekst">
                 Selecteer een lijn voor meer uitleg over die manier van sparen.
             </p>
+            <a class="btn" role="button" href="#bereken_pensioen">Hoe gaat uw pensioen eruit zien?</a>
             <div class="arrow"></div>
         </div>
         
     </div>
     <div class="fraction-container">
         <h2>Waaruit bestaat de spaarpot?</h2>
+        <div class="arrow"></div>
         <div class="col hor-container">
             <div id="spaargeld" class="fraction">
                 <h3>Spaargeld</h3>
@@ -114,6 +116,9 @@
                 <p class="bedrag absolute">€ 0</p>
             </div>
         </div>
+    </div>
+    <div class="ref-container">
+        <h2 id="bereken_pensioen">Hoe ziet uw pensioen eruit?</h2>
     </div>
 
     <!-- Scripts -->

@@ -80,29 +80,41 @@ let yMax = 1000000;
 // Profielteksten
 const profielteksten = {
     belegger: {
-        h: "De belegger",
+        h: "De Belegger",
         tekst: "De belegger stopt iedere maand een gedeelte van zijn geld in beleggingen. Beleggen wordt over het algemeen als de " +
-            "meest rendabele vorm van sparen gezien, maar aan beleggen zitten wel risico's verbonden. Als bijvoorbeeld het aandeel" +
-            "van een bedrijf waar jij veel aandelen van hebt in waarde verminderd en jij deze aandelen verkoopt, verlies je geld." +
-            "Als je minder risico wilt lopen bij beleggen, kan je bijvoorbeeld beleggen in een beleggingsfonds. Beleggingsfondsen" +
-            "kopen en verkopen aandelen van verschillende bedrijven in verschillende sectoren, om zo het risico te spreiden. Dit" +
-            "betekent dat beleggingsfondsen vaak wel minder rendabel zijn dan wanneer jij zelf slim weet te beleggen. Als je belegt" +
-            "in aandelen, zijn er sommige bedrijven die ieder jaar een deel van hun winst uitkeren aan hun aandeelhouders in de" +
-            "vorm van divident. Veel mensen die beleggen, gebruiken hun ontvangen divident om meer van het aandeel te kopen." +
-            "Dit zorgt voor een rente-op-rente effect, wat op de lange termijn veel geld op kan leveren."
+            "meest rendabele vorm van sparen gezien, maar aan beleggen zitten wel risico's verbonden. Je kan niet alleen in aandelen " +
+            "beleggen, maar ook in obligaties, edelmetalen zoals goud, of investeren in een beleggingsfonds. sommige aandelen en " +
+            "fondsen keren dividend uit aan aandeelhouders. Door dit dividend te herinvesteren ontstaat een krachtig rente-op-rente " +
+            "effect."
     },
-    huis: {
-        h: "huis",
-        tekst: "De belegger stopt iedere maand een gedeelte van zijn geld in beleggingen. Beleggen wordt over het algemeen als de " +
-            "meest rendabele vorm van sparen gezien, maar aan beleggen zitten wel risico's verbonden. Als bijvoorbeeld het aandeel" +
-            "van een bedrijf waar jij veel aandelen van hebt in waarde verminderd en jij deze aandelen verkoopt, verlies je geld." +
-            "Als je minder risico wilt lopen bij beleggen, kan je bijvoorbeeld beleggen in een beleggingsfonds. Beleggingsfondsen" +
-            "kopen en verkopen aandelen van verschillende bedrijven in verschillende sectoren, om zo het risico te spreiden. Dit" +
-            "betekent dat beleggingsfondsen vaak wel minder rendabel zijn dan wanneer jij zelf slim weet te beleggen. Als je belegt" +
-            "in aandelen, zijn er sommige bedrijven die ieder jaar een deel van hun winst uitkeren aan hun aandeelhouders in de" +
-            "vorm van divident. Veel mensen die beleggen, gebruiken hun ontvangen divident om meer van het aandeel te kopen." +
-            "Dit zorgt voor een rente-op-rente effect, wat op de lange termijn veel geld op kan leveren."
-    }
+    genieter: {
+        h: "De Genieter",
+        tekst: "De genieter leeft in het nu en spendeert al zijn geld om een luxe leven te leiden. Omdat hij alleen pensioen opbouwt " +
+            "Via de pensioenregeling van zijn werkgever zal hij in de toekomst veel minder geld over houden voor leuke dingen na zijn " +
+            "pensionering.<br><br>Check hoeveel pensioen u opgebouwd heeft op " +
+            "<a href='https://www.mijnpensioenoverzicht.nl/' target='_blank'>mijnpensioenoverzicht.nl</a>."
+    },
+    huiseigenaar: {
+        h: "De Huiseigenaar",
+        tekst: "De huiseigenaar stopt zijn spaargeld in het kopen van een extra huis, welke hij vervolgens gaat verhuren. Het kopen van " +
+            "vastgoed of andere bezittingen zoals een boot, is ook een vorm van sparen. De waardes van dit soort bezittingen stijgen " +
+            "vaak over de tijd heen. Het voordeel aan beleggen in bezittingen, is dat je op het moment van aankoop ook gebruik kan maken " +
+            "van de bezitting, of deze kan verhuren. Veel bezittingen eisen echter wel onderhoudskosten. Dit maakt het dat deze methode " +
+            "van beleggen vaak minder oplevert."
+    },
+    spaarder: {
+        h: "De Spaarder",
+        tekst: "De spaarder zet iedere maand een gedeelte van zijn inkomen opzij op een spaarrekening. Geld op een spaarrekening zetten " +
+            "is een van de minst efficiënte manieren van sparen. Het probleem met andere manieren van sparen is dat deze uitgaan van " +
+            "langere periodes van inzet, waarbij je geld niet eerder teruggehaald kan worden om verlies te voorkomen. Daarom wordt vaak " +
+            "aangeraden om een kleine spaarpot van geld opzij te houden voor onverwachtse en dus niet al je geld te beleggen."
+    },
+    belegger_laat: {
+        h: "De late Belegger",
+        tekst: "De late belegger twijfelt voor een lange tijd wat hij wilt doen met zijn geld, daarom begint hij pas op zijn 50e met " +
+            "beleggen in aandelen. Voor zijn 50e volgt hij het patroon van de spaarder, maar daarna investeert hij net zoals de belegger " +
+            "iedere maand een bepaald bedrag in zijn beleggingen."
+    },
 };
 
 
@@ -151,9 +163,9 @@ function initializeGraph() {
         .attr("id", "path-clip")
         .append("rect")
         .attr("x", 0)
-        .attr("y", -20)
+        .attr("y", -margin.top)
         .attr("width", width - margin.left)
-        .attr("height", height + 20 - margin.bottom);
+        .attr("height", height - margin.bottom);
     
     // add clipPath on the pathContainer
     pathContainer.attr("clip-path","url(#path-clip)")
@@ -181,7 +193,7 @@ function initializeGraph() {
         .html("Afspeelsnelheid:")
         .attr('transform', 'translate(-120, 5)')
         .style("fill", "#1B4332")
-        .style("font-family", "Volkorn")
+        .style("font-family", "'Vollkorn', serif")
         .style("font-size", "12px");
 
     sliderContainer.call(sliderFill);
@@ -229,7 +241,7 @@ function setProfiles() {
             .setOverigVerzekering(0)
             .setRecreationBudget(100, 150, 35, 40)
             .setBelegRisico(risico.GEMIDDELD)
-            .setProfieltekst(profielteksten.belegger.h, profielteksten.belegger.tekst),
+            .setProfieltekst(profielteksten.genieter.h, profielteksten.genieter.tekst),
         createProfile("Belegger", false)
             .addPerson("m", true, 40, 18)
             .addHouse(house.TUSSENWONING, 314000, 113.40, true, true)
@@ -243,13 +255,15 @@ function setProfiles() {
             //.addHouse(house.TUSSENWONING, 314000, 113.40, false, true)
             .setZorgverzekering(false, 500, false)
             .setOverigVerzekering(36)
-            .setRecreationBudget(100, 200, 17, 19),
+            .setRecreationBudget(100, 200, 17, 19)
+            .setProfieltekst(profielteksten.huiseigenaar.h, profielteksten.huiseigenaar.tekst),
         createProfile("Spaarder", false)
             .addPerson("m", true, 40, 18)
             //.addHouse(house.TUSSENWONING, 314000, 113.40, false, true)
             .setZorgverzekering(false, 500, false)
             .setOverigVerzekering(36)
-            .setRecreationBudget(100, 200, 17, 19),
+            .setRecreationBudget(100, 200, 17, 19)
+            .setProfieltekst(profielteksten.spaarder.h, profielteksten.spaarder.tekst),
         createProfile("Late belegger", false)
             .addPerson("m", true, 40, 18)
             .addHouse(house.TUSSENWONING, 314000, 113.40, true, true)
@@ -257,7 +271,7 @@ function setProfiles() {
             .setOverigVerzekering(0)
             .setRecreationBudget(100, 150, 17, 19)
             .setBelegRisico(risico.GEMIDDELD)
-            .setProfieltekst(profielteksten.belegger.h, profielteksten.belegger.tekst)
+            .setProfieltekst(profielteksten.belegger_laat.h, profielteksten.belegger_laat.tekst)
     );
 }
 
