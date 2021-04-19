@@ -34,11 +34,11 @@ let data = [];
 // Visualisation influencing variables
 const startLeeftijd = 18;
 const eindLeeftijd = 67
+const datapoints = 10;
 let speed = 500;
 const sliderData = [-2, -1, 0, 1, 2]; // afspeelsnelheid slider, vb: https://bl.ocks.org/johnwalley/e1d256b81e51da68f7feb632a53c3518
 let tickInterval = null;
 let changeTickInterval = false;
-// const colors = ["#ff595e", "#ffca3a", "#8ac926", "#1982c4", "#6a4c93"];
 const colors = ["#47126b","#6411ad","#973aa8","#c05299","#ea698b"];
 const strokes = ["none", "50 15", "10 10", "5 10 5 10 5", "1 5"];
 let selected = null; 
@@ -145,8 +145,6 @@ const profielteksten = {
 function initializeGraph() {
     svgTime.attr("viewBox", `0 0 ${width} ${height}`)
         .style("background-color", "#B7E4C7")
-    
-    
 
     axisContainer.attr("transform", `translate(${margin.left}, ${margin.top})`)
         .style("color", "#1B4332");
@@ -219,21 +217,15 @@ function initializeGraph() {
     // De nederlander heeft gemiddeld een woonoppervlak van 65 m2 https://www.beaufortmakelaars.nl/nederlander-heeft-gemiddeld-65-m2-woonoppervlakte/.
     // first general profile
     setProfiles();
+
+    // update the vis to enter the lines
+    updateVis();
 }
 
 
 // creates the profiles and adds them to the data array
 function setProfiles() {
     data.push(
-        // createProfile("Gezin", true)
-        //     .addPerson("m", true, 40, 18)
-        //     .addPerson("v", true, 30, 18)
-        //     .addPerson("m", false, 0, 2)
-        //     .addHouse(house.FLAT, 314000, 82.30, true, true)
-        //     .addCar(car.MINI_KLASSE, 8000)
-        //     .setZorgverzekering(true, 0, false)
-        //     .setOverigVerzekering(38)
-        //     .setRecreationBudget(200, 300, 17, 19),
         createProfile("Genieter", false)
             .addPerson("m", true, 40, 18)
             .addHouse(house.TUSSENWONING, 314000, 113.40, true, true)
@@ -252,14 +244,13 @@ function setProfiles() {
             .setProfieltekst(profielteksten.belegger.h, profielteksten.belegger.tekst),
         createProfile("Huiseigenaar", false)
             .addPerson("m", true, 40, 18)
-            //.addHouse(house.TUSSENWONING, 314000, 113.40, false, true)
             .setZorgverzekering(false, 500, false)
             .setOverigVerzekering(36)
             .setRecreationBudget(100, 200, 17, 19)
             .setProfieltekst(profielteksten.huiseigenaar.h, profielteksten.huiseigenaar.tekst),
         createProfile("Spaarder", false)
             .addPerson("m", true, 40, 18)
-            //.addHouse(house.TUSSENWONING, 314000, 113.40, false, true)
+            .addHouse(house.TUSSENWONING, 314000, 113.40, true, true)
             .setZorgverzekering(false, 500, false)
             .setOverigVerzekering(36)
             .setRecreationBudget(100, 200, 17, 19)
@@ -309,6 +300,8 @@ function restart() {
     else {
         setProfiles();
     }
+
+    updateVis();
 
     startBtn.on("click", startVis)
     
@@ -514,82 +507,8 @@ function tick() {
         }
 
         console.log(data)
-        const datapoints = 10;
-        let xMax = data[0].data.length + startLeeftijd - 1;
-        let xMin = startLeeftijd < xMax - datapoints ? xMax - datapoints : startLeeftijd;
         
-
-        xAxis.transition()
-            .duration(speed)
-            .ease(d3.easeLinear)
-            .call(d3.axisBottom(xScale.domain([xMin, xMax])));
-
-        yAxis.transition()
-            .duration(speed)
-            .ease(d3.easeLinear)
-            .call(d3.axisLeft(yScale.domain([yMax, yMin])));
-
-
-        let lines = pathContainer.selectAll("g").data(data);
-
-        // update
-        lines.select("path").transition()
-            .duration(speed)
-            .ease(d3.easeLinear)
-            .attrTween("d", function (d) {
-                return pathTween(lineValues(d.data), 1, this)()
-            });
-        lines.select("text").transition()
-            .duration(speed)
-            .ease(d3.easeLinear)
-            .attr("x", (d) => {return xScale(d.data[d.data.length - 1].year) + 5; })
-            .attr("y", (d) => {return yScale(d.data[d.data.length - 1].total) + 5; })
-        
-        // enter
-        let enter = lines.enter()
-            .append("g")
-            .attr("id", (d) => { return `${d.profile}` })
-        
-        enter.append("path")
-            .classed("line", true)
-            .attr("d", `M${xScale(0)},${yScale(0)} L${xScale(0)},${yScale(0)}`)
-            .style("stroke", (d, i) => { return colors[i]; })
-            .style("stroke-dasharray", (d, i) => { return strokes[i]; })
-            .style("stroke-width", 1.5)
-            .style("stroke-linecap", "round")
-            .style("stroke-linejoin", "round")
-            .style("fill", "none")
-            
-            .on("mouseover", function(){d3.select(this).style("stroke-width", 3);})
-            .on("mouseout", function(){
-                if (selected === null || selected.profile != d3.select(this.parentNode).attr("id")) {
-                    d3.select(this).style("stroke-width", 1.5);
-                }
-            })
-            .on("click", selectLine)
-            .transition()
-            .duration(speed)
-            .ease(d3.easeLinear)
-            .attrTween("d", function (d) {
-                return pathTween(lineValues(d.data), 1, this)()
-            });
-        
-        enter.append("text")
-            .classed("label", true)
-            .html((d) => {return `${d.profile}`; })
-            .style("fill", (d, i) => { return colors[i]; })
-            .style("font-family", "'Vollkorn', serif")
-            .style("font-size", 14)
-            .on("click", selectText)
-            .transition()
-            .duration(speed)
-            .ease(d3.easeLinear)
-            .attr("x", (d) => {return xScale(d.data[d.data.length - 1].year) + 10; })
-            .attr("y", (d) => {return yScale(d.data[d.data.length - 1].total); })
-            
-
-        // exit
-        let exit = lines.exit().remove();
+        updateVis()
 
         if  (selected != null) {
             updateCards();        
@@ -597,13 +516,14 @@ function tick() {
     }
 }
 
-
+// returns a Linear scale with the given parameters
 function getLinearScale(minData, maxData, minRange, maxRange) {
     let scale = d3.scaleLinear()
         .domain([minData, maxData])
         .range([minRange, maxRange]);
     return scale;
 }
+
 
 // sets the selected profile from the clicked text
 function selectText(e, d) {
@@ -634,6 +554,86 @@ function selectLine(e, d) {
     d3.select(".profieltekst").html(d.profieltekst.p);
     selected = d;
     updateCards();
+}
+
+
+// Updates the visualisation with the new values
+function updateVis() {
+    let xMax = data[0].data.length + startLeeftijd - 1;
+    let xMin = startLeeftijd < xMax - datapoints ? xMax - datapoints : startLeeftijd;
+    
+
+    xAxis.transition()
+        .duration(speed)
+        .ease(d3.easeLinear)
+        .call(d3.axisBottom(xScale.domain([xMin, xMax])));
+
+    yAxis.transition()
+        .duration(speed)
+        .ease(d3.easeLinear)
+        .call(d3.axisLeft(yScale.domain([yMax, yMin])));
+
+
+    let lines = pathContainer.selectAll("g").data(data);
+
+    // update
+    lines.select("path").transition()
+        .duration(speed)
+        .ease(d3.easeLinear)
+        .attrTween("d", function (d) {
+            return pathTween(lineValues(d.data), 1, this)()
+        });
+    lines.select("text").transition()
+        .duration(speed)
+        .ease(d3.easeLinear)
+        .attr("x", (d) => {return xScale(d.data[d.data.length - 1].year) + 5; })
+        .attr("y", (d) => {return yScale(d.data[d.data.length - 1].total) + 5; })
+    
+    // enter
+    let enter = lines.enter()
+        .append("g")
+        .attr("id", (d) => { return `${d.profile}` })
+    
+    enter.append("path")
+        .classed("line", true)
+        .attr("d", `M${xScale(0)},${yScale(0)} L${xScale(0)},${yScale(0)}`)
+        .style("stroke", (d, i) => { return colors[i]; })
+        .style("stroke-dasharray", (d, i) => { return strokes[i]; })
+        .style("stroke-width", 1.5)
+        .style("stroke-linecap", "round")
+        .style("stroke-linejoin", "round")
+        .style("fill", "none")
+        
+        .on("mouseover", function(){d3.select(this).style("stroke-width", 3);})
+        .on("mouseout", function(){
+            if (selected === null || selected.profile != d3.select(this.parentNode).attr("id")) {
+                d3.select(this).style("stroke-width", 1.5);
+            }
+        })
+        .on("click", selectLine)
+        .transition()
+        .duration(speed)
+        .ease(d3.easeLinear)
+        .attrTween("d", function (d) {
+            return pathTween(lineValues(d.data), 1, this)()
+        });
+    
+    enter.append("text")
+        .classed("label", true)
+        .html((d) => {return `${d.profile}`; })
+        .style("fill", (d, i) => { return colors[i]; })
+        .style("font-family", "'Vollkorn', serif")
+        .style("font-size", 14)
+        .on("click", selectText)
+        .transition()
+        .duration(speed)
+        .ease(d3.easeLinear)
+        .attr("x", (d) => {return xScale(d.data[d.data.length - 1].year) + 10; })
+        .attr("y", (d) => {return yScale(d.data[d.data.length - 1].total); })
+        
+
+    // exit
+    let exit = lines.exit().remove();
 }
 
 
@@ -1261,7 +1261,6 @@ function calcInvestmentCapital(investments) {
 
 // returns total of debts
 function calcDebts(yearData, debts) {
-    let tot = 0;
     for (let i = 0; i < debts.length; i++) {
         let d = debts[i];
         if (d.amount < d.relief) {

@@ -20,11 +20,12 @@
     <script src="https://unpkg.com/d3-simple-slider"></script>
 
     <!-- Social: Twitter -->
-    <!-- <meta name="twitter:card" content="summary_large_image">
-    <meta name="twitter:title" content="A visualization of earthquake density">
-    <meta name="twitter:description" content="This website shows how many earthquakes have happened at different places in the world.
-     The visualization uses the density to show how likely it is to experience an earthquake at a location">
-    <meta name="twitter:image" content="https://zuyd-bd08.github.io/earthquake-pushups-JasperBlok/img/preview-card.jpg"> -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="De Pensioenrace">
+    <meta name="twitter:description" content="Heeft u al ooit nagedacht over hoe uw pensioen opgebouwd is? Veel mensen lopen een grote
+        som geld mis omdat zij pas te laat beginnen met sparen. De pensioenrace laat verschillende manieren zien waarop u kan sparen
+        voor uw pensionering!">
+    <meta name="twitter:image" content="https://jasperblok.github.io/Financial-decision-making/img/preview-card.jpg">
 </head>
 
 <body>
@@ -48,7 +49,6 @@
         <div class="graph">
             <svg id="time_chart"></svg>
             <a id="btnStart" class="btn disabled" role="button">Start</a>
-            <!-- <button onclick="tick()">tick</button> -->
             <div class="arrow"></div>
         </div>
         <div class="profiel">
@@ -56,10 +56,9 @@
             <p class="profieltekst">
                 Selecteer een lijn voor meer uitleg over die manier van sparen.
             </p>
-            <a class="btn" role="button" href="#bereken_pensioen">Hoe gaat uw pensioen eruit zien?</a>
+            <a id="btnRef" class="btn" role="button" href="#bereken_pensioen">Hoe ziet uw pensioen eruit?</a>
             <div class="arrow"></div>
         </div>
-        
     </div>
     <div class="fraction-container">
         <h2>Waaruit bestaat de spaarpot?</h2>
@@ -119,6 +118,37 @@
     </div>
     <div class="ref-container">
         <h2 id="bereken_pensioen">Hoe ziet uw pensioen eruit?</h2>
+        <p>
+            Deze webpagina is niet bedoeld om te gebruiken als leidraad voor het nemen van uw beslissingen rondom het regelen van uw pensioen.
+            Daarom geven wij u hieronder een aantal bronnen om verder te kijken en lezen over het regelen van uw pensioen.
+            <br><br>
+        </p>
+        <div class="col ref-text-container">
+            <p>
+                Het Nibud heeft veel informatie over het regelen van geldzaken en is dus een goede plek om te beginnen met lezen over het regelen van uw pensioen.
+                U kan <a class="text_link" href='https://www.nibud.nl/consumenten/genoeg-inkomen-na-uw-pensioen/' target='_blank'>hier</a> beginnen met lezen.
+                Misschien start u liever met het kijken van een video, dan kan u 
+                <a class="text_link" href='https://www.youtube.com/watch?v=DBarIAfQuPA&list=PLuC6ngdp1JhhzBvrcRD-8k1zo7_YnnyGK&index=6' target='_blank'>hier</a> terecht.
+            </p>
+            <p>
+                Het Nibud heeft een tool waarmee u kan berekenen hoeveel geld u nodig heeft per maand, de 
+                <a class="text_link" href='https://pensioenschijf.nibud.nl/#/panel/0' target='_blank'>pensioenschrijf van vijf</a>. U kan deze rekentool invullen
+                om uw uitgaven te vergelijken met die van andere gelijksoortige huishoudens in Nederland en om te berekenen hoeveel geld u nodig
+                heeft om op dezelfde manier te blijven leven op het moment van pensionering.
+            </p>
+            <p>
+                Op <a class="text_link" href='https://www.mijnpensioenoverzicht.nl/' target='_blank'>mijnpensioenoverzicht.nl</a> is te zien hoeveel pensioen u 
+                opgebouwd heeft bij uw werkgevers en hoeveel u kan verwachten van de AOW. Hierop gebaseerd wordt ook een voorspelling gedaan van
+                uw maandelijkse inkomsten die u kan verwachten op het moment van pensionering.              
+            </p>
+        </div>
+        <p>
+            <br><br>
+            Het belangrijkste van alles, is echter dat u eerst een expert raadpleegt op het moment dat u bijvoorbeeld beslist om te gaan beleggen.
+            Deze expert kan u meer vertellen over de gevaren achter uw beslissing en wat de verschillende mogelijkheden zijn. De meeste banken
+            stellen medewerkers vrij om met u hierover in gesprek te gaan. Ga dus eerst in gesprek met uw bank voor advies, voordat u overhaastige
+            beslissingen maakt.
+        </p>
     </div>
 
     <!-- Scripts -->

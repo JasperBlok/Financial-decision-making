@@ -10,40 +10,41 @@ svg {
     z-index: 2;
 }
 
-h1 {
-    margin-left: 200px;
-    padding-bottom: 180;
-    color: #081C15;
-    font-family: 'Vollkorn', serif;
-    font-size: 100px;
-    font-weight: bold;
-    line-height: 1.5;
-}
-
-h2, h3 {
+h1, h2, h3 {
     position: relative;
     z-index: 2;
     color: #081C15;
     line-height: 1.5;
 }
 
+h1 {
+    margin-left: 200px;
+    padding-bottom: 180;
+    font-family: 'Vollkorn', serif;
+    font-size: 100px;
+    font-weight: bold;
+}
+
 h2 {
     font-family: 'Vollkorn', serif;
-    font-size: 50px;
-    padding-bottom: 25px;
+    font-size: 40px;
+    padding-bottom: 20px;
     font-weight: 600;
 }
 
 h3 {
     text-align: center;
     font-family: 'Open Sans', sans-serif;
-    font-size: 40px;
-    padding-bottom: 20px;
+    font-size: 35px;
+    padding-bottom: 15px;
     font-weight: 400;
 }
 
 p {
     position: relative;
+    font-family: 'Open Sans', sans-serif;
+    font-size: 20px;
+    font-weight: 400;
     color: #081C15;
     line-height: 1.5;
     z-index: 2;
@@ -123,8 +124,7 @@ img {
     grid-template-columns: 2fr 1fr;
 }
 
-.intro {
-    font-family: 'Open Sans', sans-serif;
+p.intro {
     font-size: 28px;
     font-weight: normal;
 }
@@ -156,6 +156,14 @@ img {
     background: #B7E4C7;
     padding-top: 75px;
     padding-bottom: 50px;
+    padding-right: 200px;
+    padding-left: 200px;
+}
+
+.ref-text-container {
+    position: relative;
+    z-index: 2;
+    grid-template-columns: 1fr 1fr 1fr;
 }
 
 .graph {
@@ -186,15 +194,6 @@ img {
     padding-left: 80px;
     padding-right: 100px;
     background: #D8F3DC;
-}
-
-.profieltekst {
-    position: relative;
-    color: #1B4332;
-    font-family: 'Open Sans', sans-serif;
-    font-size: 20px;
-    font-weight: 400;
-    z-index: 2;
 }
 
 .profiel .arrow {
@@ -241,7 +240,7 @@ img {
     grid-template-rows: 150px 75px 1fr 75px;
 }
 
-.bedrag {
+p.bedrag {
     position: relative;
     z-index: 1;
     font-family: 'Montserrat', sans-serif;
@@ -259,10 +258,36 @@ img {
     fill: #D8F3DC;
 }
 
+a.text_link {
+    text-decoration: none;
+}
+
+a.text_link:link {
+    color: #2198c7;
+}
+
+a.text_link:visited {
+    color: #64339c;
+}
+
+a.text_link:hover {
+    color: #00b7ff;
+}
+
+a.text_link:active {
+    color: #2198c7;
+}
+
 path#piggy-bank {
     fill: #081C15;
 }
 
 #btnStart {
     margin-left: 20px;
+}
+
+#btnRef {
+    position: relative;
+    z-index: 2;
+    margin-top: 20px;
 }
