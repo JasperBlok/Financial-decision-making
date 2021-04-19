@@ -91,8 +91,7 @@ const profielteksten = {
         h: "De Genieter",
         tekst: "De genieter leeft in het nu en spendeert al zijn geld om een luxe leven te leiden. Omdat hij alleen pensioen opbouwt " +
             "Via de pensioenregeling van zijn werkgever zal hij in de toekomst veel minder geld over houden voor leuke dingen na zijn " +
-            "pensionering.<br><br>Check hoeveel pensioen u opgebouwd heeft op " +
-            "<a href='https://www.mijnpensioenoverzicht.nl/' target='_blank'>mijnpensioenoverzicht.nl</a>."
+            "pensionering."
     },
     huiseigenaar: {
         h: "De Huiseigenaar",
@@ -414,7 +413,7 @@ function tick() {
                     if (h.rental) {
                         values.uitgaven.huiskosten.huur += calcHuur(h) * 4
                         // De gemiddelde onderhoudskosten van een huis zijn 1% van de huiswaarde
-                        // bron :https://www.woonderhoud.nl/woningonderhoud/wat-kost-het-onderhoud-van-een-huis/#:~:text=De%20kosten%20van%20onderhoud%20zijn,onderhoud%20%E2%82%AC3.000%20zullen%20bedragen.
+                        // bron: https://www.woonderhoud.nl/woningonderhoud/wat-kost-het-onderhoud-van-een-huis/#:~:text=De%20kosten%20van%20onderhoud%20zijn,onderhoud%20%E2%82%AC3.000%20zullen%20bedragen.
                         // Bij een huurhuis worden het grootste deel van het onderhoud betaald door de verhuurder, maar dingen 
                         // zoals meubulair wordt over het algemeen door de bewoner betaald. Daarom is gekozen om 1/4e van de 
                         // normale onderhoudskosten te rekenen voor een huurder
